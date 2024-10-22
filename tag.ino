@@ -23,7 +23,7 @@ void setup()
     delay(1000);
     //init the configuration
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-    DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
+    DW3000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
     //define the sketch as anchor. It will be great to dynamically change the type of module
     DW3000Ranging.attachNewRange(newRange);
     DW3000Ranging.attachNewDevice(newDevice);
@@ -32,7 +32,7 @@ void setup()
     //DW1000Ranging.useRangeFilter(true);
 
     //we start the module as a tag
-    DW1000Ranging.startAsTag("7D:00:22:EA:82:60:3B:9C", DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
+    DW3000Ranging.startAsTag("7D:00:22:EA:82:60:3B:9C", DW3000.MODE_LONGDATA_RANGE_LOWPOWER);
 }
 
 void loop()
@@ -52,14 +52,14 @@ void newRange()
     Serial.println(" dBm");
 }
 
-void newDevice(DW1000Device *device)
+void newDevice(DW3000Device *device)
 {
     Serial.print("ranging init; 1 device added ! -> ");
     Serial.print(" short:");
     Serial.println(device->getShortAddress(), HEX);
 }
 
-void inactiveDevice(DW1000Device *device)
+void inactiveDevice(DW3000Device *device)
 {
     Serial.print("delete inactive device: ");
     Serial.println(device->getShortAddress(), HEX);
