@@ -5,7 +5,7 @@ For ESP32 UWB or ESP32 UWB Pro
 */
 
 #include <SPI.h>
-#include "DW1000Ranging.h"
+#include "DW3000Ranging.h"
 
 #define SPI_SCK 18
 #define SPI_MISO 19
@@ -25,9 +25,9 @@ void setup()
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
     DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
     //define the sketch as anchor. It will be great to dynamically change the type of module
-    DW1000Ranging.attachNewRange(newRange);
-    DW1000Ranging.attachNewDevice(newDevice);
-    DW1000Ranging.attachInactiveDevice(inactiveDevice);
+    DW3000Ranging.attachNewRange(newRange);
+    DW3000Ranging.attachNewDevice(newDevice);
+    DW3000Ranging.attachInactiveDevice(inactiveDevice);
     //Enable the filter to smooth the distance
     //DW1000Ranging.useRangeFilter(true);
 
@@ -37,18 +37,18 @@ void setup()
 
 void loop()
 {
-    DW1000Ranging.loop();
+    DW3000Ranging.loop();
 }
 
 void newRange()
 {
     Serial.print("from: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+    Serial.print(DW3000Ranging.getDistantDevice()->getShortAddress(), HEX);
     Serial.print("\t Range: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getRange());
+    Serial.print(DW3000Ranging.getDistantDevice()->getRange());
     Serial.print(" m");
     Serial.print("\t RX power: ");
-    Serial.print(DW1000Ranging.getDistantDevice()->getRXPower());
+    Serial.print(DW3000Ranging.getDistantDevice()->getRXPower());
     Serial.println(" dBm");
 }
 
