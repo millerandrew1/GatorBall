@@ -34,10 +34,10 @@ async def connect(address):
 #we would need to break down the field into an xy plane, a simple way to do this would be to treat the values for calculation as
 #the yardage values
 loc = 0 
+P=lx.Project(mode='2D',solver='LSE') 
 def calculate():
-    P=lx.Project(mode='2D',solver='LSE') 
     a_x = input("A x value = ")
-    a_y = input("A x value = ")
+    a_y = input("A y value = ")
     b_x = input("B x value = ")
     b_y = input("B y value = ")
     a_dist= input("A to point = ")
@@ -67,8 +67,35 @@ def calculate():
     print(t.loc)
     loc = t.loc
 
+def updateLoc(a,b):
+    t,label=P.add_target()
+
+    t.add_measure('anchore_A', a)
+    t.add_measure('anchore_B',b)
+    P.solve()
+
+    print (t.loc)
+    loc = t.loc
+
+
 #calls to functions, can also connect to a BLE device for demo in pre-alpha
 
 #asyncio.run(connect(address))
 #asyncio.run(find())
 calculate()
+game = True
+while game == True:
+    new_a = input("Updated distance from a: ")
+    new_b = input("Updated distance from b: ")
+    new_a = int(new_a)
+    new_b = int(new_b)
+
+    updateLoc(new_a, new_b)
+
+    game_status = input("Is game over(1 if not over)?: ")
+    game_status = int(game_status)
+
+    if game_status == 1:
+        continue
+    else:
+        break
