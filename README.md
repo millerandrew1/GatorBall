@@ -10,6 +10,6 @@ Localization - https://github.com/kamalshadi/Localization
 Localization dependency (may not be needed) - https://shapely.readthedocs.io/en/stable/
 
 Installation commands
-pip install localizations
+pip install localization
 pip install bleak
 pip install shapely
