@@ -32,6 +32,8 @@ def recv_message(): # get a and b from client
 
 
             print(a, b)
+
+            break
             #message = input("Enter message: ")
             #client.send(message.encode('utf-8'))
     except OSError as e:
@@ -40,6 +42,6 @@ def close():
     client.close()
     server.close()
 
-server_init()
-recv_message()
-close()
+#server_init()
+#recv_message()
+#close()

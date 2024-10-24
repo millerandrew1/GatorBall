@@ -2,7 +2,7 @@ import asyncio
 import numpy as np
 import localization as lx
 import server_bt
-import client_bt
+#import client_bt
 from bleak import BleakScanner
 from bleak import BleakClient
 
@@ -66,9 +66,8 @@ def calculate():
     P.solve()
 
 # Then the target location is:
-
-    print(t.loc)
     loc = t.loc
+    print(loc)
 
 def updateLoc(a,b):
     t,label=P.add_target()
@@ -77,17 +76,20 @@ def updateLoc(a,b):
     t.add_measure('anchore_B',b)
     P.solve()
 
-    print (t.loc)
     loc = t.loc
+    print(loc)
 
 
 #calls to functions, can also connect to a BLE device for demo in pre-alpha
 
 #asyncio.run(connect(address))
 #asyncio.run(find())
+calculate()
+
+
 server_bt.server_init()
 
-calculate()
+
 game = True
 while game == True:
     server_bt.recv_message()
@@ -101,3 +103,5 @@ while game == True:
         continue
     else:
         break
+
+server_bt.close()
