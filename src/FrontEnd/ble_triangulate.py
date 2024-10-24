@@ -1,8 +1,11 @@
 import asyncio
 import numpy as np
 import localization as lx
+import server_bt
+import client_bt
 from bleak import BleakScanner
 from bleak import BleakClient
+
 
 #Goals of this script
 # 1. Find and connect to the ESP32 through BLE
@@ -21,7 +24,7 @@ async def find():  #example for finding devices, useful for testing and finding 
     for d in devices:
         print(d)
 
-address = "AA:AA:AA:AA:AA:AA"  #find address of our modules, this is just a filler for now from an example
+address = "FC:AA:81:A7:50:28"  #find address of our modules, this is just a filler for now from an example
 MODEL_NBR_UUID = "2A24"
 
 async def connect(address):
@@ -82,15 +85,14 @@ def updateLoc(a,b):
 
 #asyncio.run(connect(address))
 #asyncio.run(find())
+server_bt.server_init()
+
 calculate()
 game = True
 while game == True:
-    new_a = input("Updated distance from a: ")
-    new_b = input("Updated distance from b: ")
-    new_a = int(new_a)
-    new_b = int(new_b)
+    server_bt.recv_message()
 
-    updateLoc(new_a, new_b)
+    updateLoc(server_bt.a, server_bt.b)
 
     game_status = input("Is game over(1 if not over)?: ")
     game_status = int(game_status)

@@ -1,12 +1,10 @@
 import socket
 
-a = 0
-b = 0
 def server_init():
     global server 
     server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
     server.bind(("60:e9:aa:2c:92:ee", 4)) #address of current machine should be used, this is for Josh's laptop as example
-    server.listen(1)
+    server.listen(1) #number of ports to use for communication, for now just one but actual would use 2 for each anchor
 
     global client
     global addr
@@ -14,7 +12,7 @@ def server_init():
     client, addr = server.accept()
 def recv_message(): # get a and b from client
     #global data
-    global a
+    global a 
     global b
     try:
         while True:

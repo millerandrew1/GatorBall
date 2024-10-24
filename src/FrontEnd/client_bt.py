@@ -1,5 +1,7 @@
 import socket
 
+#Client side script for example with BT connection
+
 def client_init():
     global client
     client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
