@@ -20,7 +20,7 @@ root.configure(bg="lightblue")
 
 # Create a canvas to represent the field
 canvas = tk.Canvas(root, width=700, height=250, bg="lightgreen", highlightthickness=0)
-canvas.place(x=50, y=50)
+canvas.place(x=150, y=50)
 
 # End zones
 canvas.create_rectangle(0, 0, 70, 250, fill="orange")
@@ -80,7 +80,7 @@ for label_text, position in labels.items():
 
 # Button to simulate updating values (in a real game, this could be hooked to a live data feed)
 update_button = tk.Button(root, text="Update Values", command=update_values)
-update_button.place(x=350, y=450)
+update_button.place(x=440, y=450)
 
 # Run the main loop
 root.mainloop()
