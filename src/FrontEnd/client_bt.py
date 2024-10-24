@@ -10,7 +10,9 @@ def client_init():
 def client_send():
     try:
         while True:
-            message = input("Enter Location: ")
+            message = input("Enter Distance From A: ")
+            client.send(message.encode('utf-8'))
+            message = input("Enter Distance From B: ")
             client.send(message.encode('utf-8'))
             data = client.recv(1024)
             if not data:
