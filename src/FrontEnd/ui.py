@@ -76,7 +76,7 @@ for label_text, position in labels.items():
     
     # Dynamic value labels
     value_label = tk.Label(root, textvariable=position[2], font=("Helvetica", 12), bg="lightblue")
-    value_label.place(x=position[0] + 150, y=position[1])
+    value_label.place(x=position[0] + 200, y=position[1])
 
 # Button to simulate updating values (in a real game, this could be hooked to a live data feed)
 update_button = tk.Button(root, text="Update Values", command=update_values)
