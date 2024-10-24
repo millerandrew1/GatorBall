@@ -5,7 +5,7 @@ def main():
     # Function to update label values
     def update_values():
         ble_triangulate.recv_update()
-        yd_line = str(ble_triangulate.y) + "-yard line"
+        yd_line = str(int(ble_triangulate.loc.y)) + "-yard line"
         possession.set("Team A")
         line_of_scrimmage.set("50-yard line")
         current_yard_line.set(yd_line)

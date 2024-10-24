@@ -12,6 +12,10 @@ def client_send():
         while True:
             message = input("Enter Location: ")
             client.send(message.encode('utf-8'))
+
+            message2 = input("Enter Location: ")
+            client.send(message2.encode('utf-8'))
+            
             data = client.recv(1024)
             if not data:
                 break

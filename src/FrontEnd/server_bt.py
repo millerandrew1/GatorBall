@@ -15,26 +15,27 @@ def recv_message(): # get a and b from client
     global a 
     global b
     try:
-        while True:
+        
             #get a
-            data = client.recv(1024)
-            if not data:
-                break
-            print(f"Message: {data.decode('utf-8')}")
-            a = int(data.decode('utf-8'))
+        data = client.recv(1024)
+        if not data: 
+            return
+        print(f"Message: {data.decode('utf-8')}")
+        a = int(data.decode('utf-8'))
 
             # again for b
-            data = client.recv(1024)
-            if not data:
-                break
-            print(f"Message: {data.decode('utf-8')}")
-            b = int(data.decode('utf-8'))
-            print(a, b)
-            break
+        data = client.recv(1024)
+        if not data:
+            return
+        
+        print(f"Message: {data.decode('utf-8')}")
+        b = int(data.decode('utf-8'))
+        print(a, b)
     except OSError as e:
         pass
 
 def server_send(message):
+    message = str(message)
     client.send(message.encode('utf-8'))
 
 
