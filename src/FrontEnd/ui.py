@@ -65,9 +65,9 @@ labels = {
     "First Down Marker:": (400, 350, first_down_marker),
     "Yards To Gain:": (400, 380, yards_to_gain),
     "Score:": (400, 410, score),
-    "Play Clock:": (600, 350, play_clock),
-    "Game Clock:": (600, 380, game_clock),
-    "Quarter:": (600, 410, quarter),
+    "Play Clock:": (750, 350, play_clock),
+    "Game Clock:": (750, 380, game_clock),
+    "Quarter:": (750, 410, quarter),
 }
 
 for label_text, position in labels.items():
@@ -76,7 +76,7 @@ for label_text, position in labels.items():
     
     # Dynamic value labels
     value_label = tk.Label(root, textvariable=position[2], font=("Helvetica", 12), bg="lightblue")
-    value_label.place(x=position[0] + 200, y=position[1])
+    value_label.place(x=position[0] + 150, y=position[1])
 
 # Button to simulate updating values (in a real game, this could be hooked to a live data feed)
 update_button = tk.Button(root, text="Update Values", command=update_values)
