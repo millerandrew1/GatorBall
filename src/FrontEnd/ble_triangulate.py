@@ -39,12 +39,12 @@ async def connect(address):
 def calculate():
     global P 
     P=lx.Project(mode='2D',solver='LSE') 
-    a_x = input("A x value = ")
-    a_y = input("A y value = ")
-    b_x = input("B x value = ")
-    b_y = input("B y value = ")
-    a_dist= input("A to point = ")
-    b_dist = input("B to points = ")
+    a_x = 0 #input("A x value = ")
+    a_y = 0  #input("A y value = ")
+    b_x = 0 #input("B x value = ")
+    b_y = 100 #input("B y value = ")
+    a_dist= 50 #input("A to point = ")
+    b_dist = 50 #input("B to points = ")
     
     a_x = int(a_x)
     a_y = int(a_y)
@@ -68,7 +68,9 @@ def calculate():
 # Then the target location is:
 # You can get each value by using loc.x, loc.y, depeding on anchor locations either could be used to determine spot
     global loc
+    global y 
     loc = t.loc
+    y = float(loc.y)
     print(loc)
 
 def updateLoc(a,b):
@@ -79,6 +81,7 @@ def updateLoc(a,b):
     P.solve()
 
     loc = t.loc
+    y = float(loc.y)
     print(loc)
 
 
@@ -107,3 +110,6 @@ def recv_update(): #call this to get new values from client
 
 def close():
     server_bt.close()
+
+#calculate()
+#print(y)
