@@ -10,19 +10,27 @@ def client_init():
 def client_send():
     try:
         while True:
-            message = input("Enter Distance From A: ")
-            client.send(message.encode('utf-8'))
-            
-            message2 = input("Enter Location: ")
-            client.send(message2.encode('utf-8'))
-            
-            data = client.recv(1024)
+            start = client.recv(1024)
+
             if not data:
                 break
-            elif (int(data.decode('utf-8')) == 1):
-                continue
+            elif (start.decode('utf-8') == "Go"):
+
+                message = input("Enter Distance From A: ")
+                client.send(message.encode('utf-8'))
+            
+                message2 = input("Enter Location: ")
+                client.send(message2.encode('utf-8'))
+            
+                data = client.recv(1024)
+                if not data:
+                    break
+                elif (int(data.decode('utf-8')) == 1):
+                    continue
+                else:
+                    break
             else:
-                break
+                continue
         
     except OSError as e:
         pass

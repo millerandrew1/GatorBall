@@ -15,7 +15,6 @@ def recv_message(): # get a and b from client
     global a 
     global b
     try:
-        
             #get a
         data = client.recv(1024)
         if not data: 

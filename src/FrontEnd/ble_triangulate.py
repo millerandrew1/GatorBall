@@ -97,6 +97,7 @@ def init(): # initialize server and triangulation data
     server_bt.server_init()
 
 def recv_update(): #call this to get new values from client 
+    server_bt.server_send("Go")
     server_bt.recv_message()
 
     updateLoc(server_bt.a, server_bt.b)
