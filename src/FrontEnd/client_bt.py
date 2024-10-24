@@ -12,7 +12,7 @@ def client_send():
         while True:
             start = client.recv(1024)
 
-            if not data:
+            if not start:
                 break
             elif (start.decode('utf-8') == "Go"):
 
