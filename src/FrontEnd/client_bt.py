@@ -12,9 +12,7 @@ def client_send():
         while True:
             message = input("Enter Distance From A: ")
             client.send(message.encode('utf-8'))
-            message = input("Enter Distance From B: ")
-            client.send(message.encode('utf-8'))
-
+            
             message2 = input("Enter Location: ")
             client.send(message2.encode('utf-8'))
             
