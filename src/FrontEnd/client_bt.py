@@ -17,6 +17,8 @@ def client_send():
                 break
             elif (int(data.decode('utf-8')) == 1):
                 continue
+            else:
+                break
         
     except OSError as e:
         pass

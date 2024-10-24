@@ -35,9 +35,10 @@ async def connect(address):
 #main information we will need from the anchors would be the distance to the ball since achors will be at fixed locations on the field
 #we would need to break down the field into an xy plane, a simple way to do this would be to treat the values for calculation as
 #the yardage values
-loc = 0 
-P=lx.Project(mode='2D',solver='LSE') 
+
 def calculate():
+    global P 
+    P=lx.Project(mode='2D',solver='LSE') 
     a_x = input("A x value = ")
     a_y = input("A y value = ")
     b_x = input("B x value = ")
@@ -66,6 +67,7 @@ def calculate():
 
 # Then the target location is:
 # You can get each value by using loc.x, loc.y, depeding on anchor locations either could be used to determine spot
+    global loc
     loc = t.loc
     print(loc)
 
@@ -84,26 +86,24 @@ def updateLoc(a,b):
 
 #asyncio.run(connect(address))
 #asyncio.run(find())
-calculate()
 
+def init(): # initialize server and triangulation data
+    calculate()
+    server_bt.server_init()
 
-server_bt.server_init()
-
-
-game = True
-while game == True:
+def recv_update(): #call this to get new values from client 
     server_bt.recv_message()
 
     updateLoc(server_bt.a, server_bt.b)
 
     game_status = input("Is game over(1 if not over)?: ")
-    game_status = int(game_status)
+    game = int(game_status)
 
-    if game_status == 1:
-        server_bt.server_send(game_status)
-        continue
+    if game == 1:
+        server_bt.server_send(game_status.encode('utf-8'))
     else:
-        break
+        server_bt.server_send(game_status.encode('uft-8'))
+        server_bt.close()
 
-
-server_bt.close()
+def close():
+    server_bt.close()
