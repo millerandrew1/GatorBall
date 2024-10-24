@@ -29,15 +29,15 @@ def recv_message(): # get a and b from client
                 break
             print(f"Message: {data.decode('utf-8')}")
             b = int(data.decode('utf-8'))
-
-
             print(a, b)
-
             break
-            #message = input("Enter message: ")
-            #client.send(message.encode('utf-8'))
     except OSError as e:
         pass
+
+def server_send(message):
+    client.send(message.encode('utf-8'))
+
+
 def close():
     client.close()
     server.close()

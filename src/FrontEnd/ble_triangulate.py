@@ -2,7 +2,6 @@ import asyncio
 import numpy as np
 import localization as lx
 import server_bt
-#import client_bt
 from bleak import BleakScanner
 from bleak import BleakClient
 
@@ -66,6 +65,7 @@ def calculate():
     P.solve()
 
 # Then the target location is:
+# You can get each value by using loc.x, loc.y, depeding on anchor locations either could be used to determine spot
     loc = t.loc
     print(loc)
 
@@ -100,8 +100,10 @@ while game == True:
     game_status = int(game_status)
 
     if game_status == 1:
+        server_bt.server_send(game_status)
         continue
     else:
         break
+
 
 server_bt.close()

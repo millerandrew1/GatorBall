@@ -12,10 +12,11 @@ def client_send():
         while True:
             message = input("Enter Location: ")
             client.send(message.encode('utf-8'))
-            #data = client.recv(1024)
-            #if not data:
-                #break
-            #print(f"Message: {data.decode('utf-8')}")
+            data = client.recv(1024)
+            if not data:
+                break
+            elif (int(data.decode('utf-8')) == 1):
+                continue
         
     except OSError as e:
         pass
