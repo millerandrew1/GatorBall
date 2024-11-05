@@ -1,4 +1,6 @@
 #include "dw3000.h"
+#include "BluetoothSerial.h"
+BluetoothSerial SerialBT;
 
 #define PIN_RST 27
 #define PIN_IRQ 34
@@ -41,8 +43,30 @@ static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
 
+void macStringToBytes(const char* macStr, uint8_t* macBytes) {
+    sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+           &macBytes[0], &macBytes[1], &macBytes[2], 
+           &macBytes[3], &macBytes[4], &macBytes[5]);
+}
+
 void setup()
 {
+  const char* serverAddress = "C0:3C:59:65:AA:E9"; 
+const int serverChannel = 4; 
+  Serial.begin(115200);
+  SerialBT.begin("ESP32_Distance");  // Name of the ESP32 Bluetooth device
+  Serial.println("Bluetooth initialized.");
+
+uint8_t serverAddressBytes[6];
+    macStringToBytes(serverAddress, serverAddressBytes);
+
+    // Attempt to connect to the server
+    if (SerialBT.connect(serverAddressBytes, serverChannel)) {
+        Serial.println("Connected to Bluetooth server!");
+    } else {
+        Serial.println("Failed to connect to Bluetooth server.");
+    }
+
   UART_init();
 
   spiBegin(PIN_IRQ, PIN_RST);
@@ -97,6 +121,9 @@ void setup()
 
 void loop()
 {
+  if (!SerialBT.hasClient()) {
+    SerialBT.begin("ESP32_Distance"); // Reconnect if disconnected
+}
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
   tx_poll_msg[ALL_MSG_SN_IDX] = frame_seq_nb;
   dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS_BIT_MASK);

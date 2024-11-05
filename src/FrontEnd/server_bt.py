@@ -3,7 +3,7 @@ import socket
 def server_init():
     global server 
     server = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-    server.bind(("60:e9:aa:2c:92:ee", 4)) #address of current machine should be used, this is for Josh's laptop as example
+    server.bind(("C0:3C:59:65:AA:E9", 4)) #address of current machine should be used, this is for Josh's laptop as example
     server.listen(1) #number of ports to use for communication, for now just one but actual would use 2 for each anchor
 
     global client

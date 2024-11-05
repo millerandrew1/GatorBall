@@ -5,7 +5,7 @@ import socket
 def client_init():
     global client
     client = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
-    client.connect(("60:e9:aa:2c:92:ee", 4))
+    client.connect(("C0:3C:59:65:AA:E9", 4))
 
 def client_send():
     try:
