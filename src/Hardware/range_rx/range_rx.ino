@@ -1,4 +1,5 @@
 #include "dw3000.h"
+#include "BluetoothSerial.h"
 
 #define PIN_RST 27
 #define PIN_IRQ 34
@@ -40,6 +41,8 @@ static uint32_t status_reg = 0;
 static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
+
+BluetoothSerial btSerial;
 
 void setup()
 {
@@ -93,6 +96,10 @@ void setup()
 
   Serial.println("Range RX");
   Serial.println("Setup over........");
+
+  btSerial.begin("Gatorball Tag");  //Bluetooth device name
+  btSerial.connect();
+  Serial.println("Bluetooth was set up");
 }
 
 void loop()
@@ -157,6 +164,11 @@ void loop()
 
         /* Display computed distance on LCD. */
         snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
+        for (int i = 0; i < sizeof(dist_str); i++) {
+          btSerial.write(dist_str[i]);
+        }
+        btSerial.write('\n');
+        //btSerial.write(dist_str, sizeof(dist_str));
         test_run_info((unsigned char *)dist_str);
       }
     }
