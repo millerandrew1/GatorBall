@@ -5,7 +5,7 @@
 #define PIN_IRQ 34
 #define PIN_SS 4
 
-#define RNG_DELAY_MS 1000
+#define RNG_DELAY_MS 100
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
 #define ALL_MSG_COMMON_LEN 10
@@ -43,6 +43,12 @@ static double distance;
 extern dwt_txconfig_t txconfig_options;
 
 BluetoothSerial btSerial;
+
+void multiSend(char * buffer, int size) {
+  for (int i = 0; i < size; i++) {
+    btSerial.write(buffer[i]);
+  }
+}
 
 void setup()
 {
@@ -163,13 +169,14 @@ void loop()
         distance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance on LCD. */
-        snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
+        snprintf(dist_str, sizeof(dist_str), "%3.2f\n", distance);
         for (int i = 0; i < sizeof(dist_str); i++) {
           btSerial.write(dist_str[i]);
         }
         btSerial.write('\n');
         //btSerial.write(dist_str, sizeof(dist_str));
         test_run_info((unsigned char *)dist_str);
+        //multiSend((char *)&distance, 8);
       }
     }
   }
