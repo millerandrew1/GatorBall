@@ -1,12 +1,15 @@
 #include "dw3000.h"
 #include "BluetoothSerial.h"
+<<<<<<< HEAD
 BluetoothSerial SerialBT;
+=======
+>>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
 
 #define PIN_RST 27
 #define PIN_IRQ 34
 #define PIN_SS 4
 
-#define RNG_DELAY_MS 1000
+#define RNG_DELAY_MS 100
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
 #define ALL_MSG_COMMON_LEN 10
@@ -43,10 +46,19 @@ static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
 
+<<<<<<< HEAD
 void macStringToBytes(const char* macStr, uint8_t* macBytes) {
     sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
            &macBytes[0], &macBytes[1], &macBytes[2], 
            &macBytes[3], &macBytes[4], &macBytes[5]);
+=======
+BluetoothSerial btSerial;
+
+void multiSend(char * buffer, int size) {
+  for (int i = 0; i < size; i++) {
+    btSerial.write(buffer[i]);
+  }
+>>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
 }
 
 void setup()
@@ -118,6 +130,10 @@ void setup()
 
   Serial.println("Range RX");
   Serial.println("Setup over........");
+
+  btSerial.begin("Gatorball Tag");  //Bluetooth device name
+  btSerial.connect();
+  Serial.println("Bluetooth was set up");
 }
 
 void loop()
@@ -184,8 +200,14 @@ void loop()
         distance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance on LCD. */
-        snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
+        snprintf(dist_str, sizeof(dist_str), "%3.2f\n", distance);
+        for (int i = 0; i < sizeof(dist_str); i++) {
+          btSerial.write(dist_str[i]);
+        }
+        btSerial.write('\n');
+        //btSerial.write(dist_str, sizeof(dist_str));
         test_run_info((unsigned char *)dist_str);
+        //multiSend((char *)&distance, 8);
       }
     }
   }

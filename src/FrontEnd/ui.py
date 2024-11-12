@@ -1,7 +1,11 @@
+
 import tkinter as tk
 import ble_triangulate
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
 def main():
     # Function to update label values
     def update_values():
@@ -17,6 +21,7 @@ def main():
         game_clock.set("12:35")
         quarter.set("2nd")
         print("ble_triangulate.loc.y: {}".format(ble_triangulate.loc.y))
+<<<<<<< HEAD
 =======
 # Function to update label values
 def update_values():
@@ -95,16 +100,23 @@ for label_text, position in labels.items():
     
 
 <<<<<<< HEAD
+=======
+    
+
+>>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
     # Create the main window
     root = tk.Tk()
     root.title("GatorBall")
     root.geometry("900x600")
     root.configure(bg="lightblue")
+<<<<<<< HEAD
 =======
 # Button to simulate updating values (in a real game, this could be hooked to a live data feed)
 update_button = tk.Button(root, text="Update Values", command=update_values)
 update_button.place(x=440, y=450)
 >>>>>>> 01976a48ac76923e5c83eb1c0340e1a2cb761bfe
+=======
+>>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
 
     # Create a canvas to represent the field
     canvas = tk.Canvas(root, width=700, height=250, bg="lightgreen", highlightthickness=0)
@@ -180,4 +192,8 @@ update_button.place(x=440, y=450)
 
 ble_triangulate.init()
 if __name__ == "__main__":
+<<<<<<< HEAD
     main()
+=======
+    main()
+>>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
