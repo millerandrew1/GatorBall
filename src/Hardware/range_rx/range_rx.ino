@@ -52,17 +52,18 @@ void macStringToBytes(const char* macStr, uint8_t* macBytes) {
 void setup()
 {
   const char* serverAddress = "C0:3C:59:65:AA:E9"; 
-const int serverChannel = 4; 
+  const int serverChannel = 4; 
   Serial.begin(115200);
   SerialBT.begin("ESP32_Distance");  // Name of the ESP32 Bluetooth device
   Serial.println("Bluetooth initialized.");
 
-uint8_t serverAddressBytes[6];
+  uint8_t serverAddressBytes[6];
     macStringToBytes(serverAddress, serverAddressBytes);
 
     // Attempt to connect to the server
     if (SerialBT.connect(serverAddressBytes, serverChannel)) {
         Serial.println("Connected to Bluetooth server!");
+        print
     } else {
         Serial.println("Failed to connect to Bluetooth server.");
     }
