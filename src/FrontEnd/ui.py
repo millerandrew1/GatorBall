@@ -9,37 +9,46 @@ def main():
         possession.set("Team A")
         line_of_scrimmage.set("50-yard line")
         current_yard_line.set(yd_line)
-        first_down_marker.set("55-yard line")
-        yards_to_gain.set("10 yards")
+        
+        yards_to_gain.set(str(int(ble_triangulate.loc.y) + 10))
         score.set("Home: 14 - Away: 7")
         play_clock.set("25")
         game_clock.set("12:35")
         quarter.set("2nd")
         print("ble_triangulate.loc.y: {}".format(ble_triangulate.loc.y))
+        px_curr_yd = 7*int(ble_triangulate.loc.y) + 100
+        #made it to where every 7 pixels is a yard, add 100 to account for endzone
+        canvas.coords(curr_yd, px_curr_yd, 0, px_curr_yd, 250)
+        if fdown_coor <= px_curr_yd:
+            first = str(int(ble_triangulate.loc.y)+ 10) + "-yard line"
+            canvas.coords(fdown, px_curr_yd + 70, 0, px_curr_yd + 70, 250)
+            canvas.coords(los, px_curr_yd, 0, px_curr_yd, 250)
+            first_down_marker.set(first)
     
 
     # Create the main window
     root = tk.Tk()
     root.title("GatorBall")
-    root.geometry("900x600")
+    root.geometry("1000x600")
     root.configure(bg="lightblue")
 
     # Create a canvas to represent the field
-    canvas = tk.Canvas(root, width=700, height=250, bg="lightgreen", highlightthickness=0)
+    canvas = tk.Canvas(root, width=900, height=250, bg="lightgreen", highlightthickness=0)
     canvas.place(x=50, y=50)
 
     # End zones
-    canvas.create_rectangle(0, 0, 70, 250, fill="orange")
-    canvas.create_rectangle(630, 0, 700, 250, fill="orange")
+    canvas.create_rectangle(0, 0, 100, 250, fill="orange")
+    canvas.create_rectangle(800, 0, 900, 250, fill="orange")
 
     # Add text to end zones
     canvas.create_text(35, 125, text="END ZONE", angle=90, font=("Helvetica", 8), fill="black")
     canvas.create_text(665, 125, text="END ZONE", angle=90, font=("Helvetica", 8), fill="black")
 
     # Lines: scrimmage (yellow), first down marker (red), and a yard line (blue)
-    canvas.create_line(350, 0, 350, 250, fill="yellow", width=3)  # line of scrimmage
-    canvas.create_line(450, 0, 450, 250, fill="red", width=3)     # first down marker
-    canvas.create_line(400, 0, 400, 250, fill="blue", width=3)    # current yard line
+    los = canvas.create_line(100, 0, 100, 250, fill="yellow", width=3)  # line of scrimmage
+    fdown = canvas.create_line(170, 0, 170, 250, fill="red", width=3)     # first down marker
+    curr_yd = canvas.create_line(100, 0, 100, 250, fill="blue", width=3)    # current yard line
+    fdown_coor = 200
 
     # Variables to hold dynamic label values
     possession = tk.StringVar()
