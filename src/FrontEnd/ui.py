@@ -6,22 +6,27 @@ import serial
 # Create a queue to safely pass data between threads
 q = queue.Queue()
 
+global distance
+distance = 0
+
 def main():
     def update_values_from_serial():
         """Update values dynamically from the queue."""
         while not q.empty():
             try:
+                global distance
                 distance = q.get_nowait()  # Get the next float value
-                yd_line = f"{distance:.2f}-yard line"  # Format float to 1 decimal place
+                yd_line = f"{distance:.3f}-yard line"  # Format float to 1 decimal place
                 possession.set("Team A")  # Example updates
                 line_of_scrimmage.set("50-yard line")
-                current_yard_line.set(yd_line)  # Use the formatted float value
+                current_yard_line.set("50-yard line")  # Use the formatted float value
                 first_down_marker.set("55-yard line")
                 yards_to_gain.set("10 yards")
                 score.set("Home: 14 - Away: 7")
                 play_clock.set("25")
                 game_clock.set("12:35")
                 quarter.set("2nd")
+                ball_pos.set(yd_line)
             except Exception as e:
                 print(f"Error updating values: {e}")
 
@@ -40,13 +45,26 @@ def main():
                     data = ser.readline().decode('utf-8').strip()
                     try:
                         if float(data):
+                            global distance
                             distance = float(data)  # Convert to float
-                            print(f"DISTANCE: {distance}")
+                            # Convert to yards
+                            distance_yd = distance * 1.093
+                            distance = distance_yd
+                            print(f"DISTANCE IN YARDS: {distance}")
                             q.put(distance)  # Add the float value to the queue
                     except ValueError:
                         pass  # Silently handle any issues with padding
         except Exception as e:
             print(f"Error reading serial: {e}") 
+
+    def update_screen():
+        global distance
+        # print("GLOBAL DIST: {}".format(distance))
+        canvas.delete("ball")
+        canvas.create_rectangle(
+            distance + 100, 145, distance + 100, 155, fill="black", tags="ball"
+        )
+        root.after(1000, update_screen)
 
     # Create the main window
     root = tk.Tk()
@@ -73,8 +91,8 @@ def main():
     # yellow line updated upon button press @ beginning of every play -> where ball is at that pt
     # @ beginning of every play yellow line and dot are in same place
     # red line @ beginning of every set of downs, it is a set distance from line of scrimmage, it is 10 yards, will need to scale
-    canvas.create_line(350, 0, 350, 250, fill="yellow", width=3)  # line of scrimmage
-    # canvas.create_oval(0, 0, 0, 0, fill="black", width=5)
+    # canvas.create_line(350, 0, 350, 250, fill="yellow", width=3)  # line of scrimmage
+    # canvas.create_rectangle(50, 150, distance, 150, fill="black", width=20)
     canvas.create_line(450, 0, 450, 250, fill="red", width=3)     # first down marker
     canvas.create_line(400, 0, 400, 250, fill="blue", width=3)    # current yard line
 
@@ -88,6 +106,7 @@ def main():
     play_clock = tk.StringVar()
     game_clock = tk.StringVar()
     quarter = tk.StringVar()
+    ball_pos = tk.StringVar()
 
     # Initial values for the variables
     possession.set("N/A")
@@ -99,6 +118,7 @@ def main():
     play_clock.set("N/A")
     game_clock.set("N/A")
     quarter.set("N/A")
+    ball_pos.set("N/A")
 
     # Labels for game details with dynamic values
     labels = {
@@ -111,6 +131,7 @@ def main():
         "Play Clock:": (750, 350, play_clock),
         "Game Clock:": (750, 380, game_clock),
         "Quarter:": (750, 410, quarter),
+        "Ball position: ": (50, 440, ball_pos)
     }
 
     for label_text, position in labels.items():
@@ -127,6 +148,8 @@ def main():
 
     # Start the update function with a delay of 5ms
     root.after(5, update_values_from_serial)
+
+    update_screen()
 
     # Run the main loop
     root.mainloop()
