@@ -10,6 +10,10 @@ This sprint we focued on getting the data from our tag to print to the UI. We tr
 
 Future plans for next sprint involve trying to incorporate a second anchor point so we can get a 2D position field instead of the 1D field we have now. We also need to make a PCB with the DW3000 and the ESP-32 along with including a power source. This will then need to be incorporated into a football. We also plan on transferring our python UI into a react application in order to make the project accessable for apps to be able to use it. Along with that we want to make our UI more interactable which will take in more inputs like line of scrimmage, first down line, and other various things involved in a football game (score, team names, clock time). We also have a football moving on the screen but we want to be able to visually show the line of scrimmage and the first down line.  
 
+
+PROCESS FOR RUNNING CODE AND CONNECTING BLUETOOTH TO PC
+First go to src/hardware/range_rx and upload that ardunio code to one of the DW3000 ESP 32 modules. That is now the tag. Then in src/hardware/range_tx upload that to the other one and that i your anchor point. They should now be sending data to each other and the tag should be serial printing the distance. To connect the tag to the bluetooth go to bluetooth settings and scroll down and click devices then in there click more bluetooth settings. In there click the tab that says COM PORTS and click add and add the ESP_32. Take note of what COM Port it is connected to. Finally go to src/FrontENd/ui.py. Change line 44 to reflect what COM port the bluetooth is transmitting through. Then run the UI and you should see data printing to the UI.  
+
 DEPENDENCIES
 
 Bleak BLE - https://github.com/hbldh/bleak 
