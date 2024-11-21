@@ -11,7 +11,7 @@ global distance
 distance = 0
 
 global current_yd_line_val
-current_yd_line_val = 400
+current_yd_line_val = 530
 
 def main():
     def update_values_from_serial():
@@ -66,7 +66,7 @@ def main():
         global distance, ball_img
         
         # Load the image and keep a reference to prevent garbage collection
-        ball_img = Image.open("download.png")  # Ensure the file path is correct
+        ball_img = Image.open("football.png")  
         ball_img = ball_img.resize((30, 30), Image.ANTIALIAS)
         ball_img = ImageTk.PhotoImage(ball_img)
 
@@ -74,7 +74,7 @@ def main():
         canvas.delete("ball")
 
         # Dynamically place the ball image based on `distance`
-        canvas.create_image((distance + 100) * 4, 150, image=ball_img, anchor=tk.CENTER, tags="ball")
+        canvas.create_image((distance + 130) * 4.1, 150, image=ball_img, anchor=tk.CENTER, tags="ball")
 
         # Call this function again after 50ms
         root.after(50, update_screen)
@@ -88,6 +88,13 @@ def main():
     # Create a canvas to represent the field
     canvas = tk.Canvas(root, width=700, height=250, bg="lightgreen", highlightthickness=0)
     canvas.place(x=50, y=50)
+
+    update_screen()
+
+    gator = Image.open("gator.png")  
+    gator = gator.resize((200, 150), Image.ANTIALIAS)
+    gator = ImageTk.PhotoImage(gator)
+    canvas.create_image(350, 120, image=gator, anchor=tk.CENTER, tags="gator")
 
     # End zones
     canvas.create_rectangle(0, 0, 70, 250, fill="orange")
@@ -105,7 +112,7 @@ def main():
     # canvas.create_line(350, 0, 350, 250, fill="yellow", width=3)  # line of scrimmage
     # canvas.create_rectangle(50, 150, distance, 150, fill="black", width=20)
 
-    canvas.create_line(450, 0, 450, 250, fill="red", width=3)     # first down marker
+    canvas.create_line(570, 0, 570, 250, fill="red", width=3)     # first down marker
     canvas.create_line(current_yd_line_val, 0, current_yd_line_val, 250, fill="blue", width=3)    # current yard line
 
     # Variables to hold dynamic label values
@@ -160,8 +167,6 @@ def main():
 
     # Start the update function with a delay of 5ms
     root.after(5, update_values_from_serial)
-
-    update_screen()
 
     # Run the main loop
     root.mainloop()
