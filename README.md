@@ -12,6 +12,7 @@ Future plans for next sprint involve trying to incorporate a second anchor point
 
 
 PROCESS FOR RUNNING CODE AND CONNECTING BLUETOOTH TO PC
+
 First go to src/hardware/range_rx and upload that ardunio code to one of the DW3000 ESP 32 modules. That is now the tag. Then in src/hardware/range_tx upload that to the other one and that i your anchor point. They should now be sending data to each other and the tag should be serial printing the distance. To connect the tag to the bluetooth go to bluetooth settings and scroll down and click devices then in there click more bluetooth settings. In there click the tab that says COM PORTS and click add and add the ESP_32. Take note of what COM Port it is connected to. Finally go to src/FrontENd/ui.py. Change line 44 to reflect what COM port the bluetooth is transmitting through. Then run the UI and you should see data printing to the UI.  
 
 DEPENDENCIES
