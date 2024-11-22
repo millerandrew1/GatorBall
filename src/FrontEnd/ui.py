@@ -74,7 +74,7 @@ def main():
         canvas.delete("ball")
 
         # Dynamically place the ball image based on `distance`
-        canvas.create_image((distance + 130) * 4.1, 150, image=ball_img, anchor=tk.CENTER, tags="ball")
+        canvas.create_image((distance + 110) * 4.5, 150, image=ball_img, anchor=tk.CENTER, tags="ball")
 
         # Call this function again after 50ms
         root.after(50, update_screen)
@@ -112,7 +112,7 @@ def main():
     # canvas.create_line(350, 0, 350, 250, fill="yellow", width=3)  # line of scrimmage
     # canvas.create_rectangle(50, 150, distance, 150, fill="black", width=20)
 
-    canvas.create_line(570, 0, 570, 250, fill="red", width=3)     # first down marker
+    canvas.create_line(575, 0, 575, 250, fill="red", width=3)     # first down marker
     canvas.create_line(current_yd_line_val, 0, current_yd_line_val, 250, fill="blue", width=3)    # current yard line
 
     # Variables to hold dynamic label values
