@@ -1,11 +1,12 @@
 # GatorBall
-Sprint 1 10-8-2024 to 10-25-2024:
+
+# Sprint 1 10/8/2024 to 10/25/2024: Pre-Alpha Build
 Work Completed: 
   This sprint we focuses on the front end of our design. We worked on showing dummy data and making the program that the referee will be using when determining the position of the football. We created a client that would act as our "football" and that would connect to a server and send dummy data which represents the distance from the anchor points. Then we have a python script called ble_triangulate.py that does the calculation of the exact position of the client and then we output that to our UI which displays the data. 
 
   We received our ESP-32 and DW3000 on Thursday the day before the Pre-Alpha was due so we did not have time to write a lot of code but we did have resources that we previously found and used that code to test our microchips. We were successfully able to send and receive data between the two chips and the data was the distance between the two microchips. In the future we will add the third DW3000 which will act as the football and it will take in the distance between the two microchips and then it will send that data to the ble_triangulate to calculate the position of the ball.
 
-Sprint 2 10-26-2024 to 11-22-2024
+# Sprint 2 10/26/2024 to 11/22/2024: Prototype Design
 This sprint we focued on getting the data from our tag to print to the UI. We tried to use another DW3000 to be the football but due to issues with Ardunio and there not being a compatible library we are sticking with the 1 anchor point and 1 tag for the prototype. The tag takes data from the anchor point through UWB and then is connected through bluetooth to our UI using a COM Port where we display the distance from the tag from the anchor point on the football field. We also have it continuously send data through the bluetooth so that every few miliseconds it gets new data and updates the UI. Also when the tag moves it is shown on the UI as a football moving on the field. 
 
 Future plans for next sprint involve trying to incorporate a second anchor point so we can get a 2D position field instead of the 1D field we have now. We also need to make a PCB with the DW3000 and the ESP-32 along with including a power source. This will then need to be incorporated into a football. We also plan on transferring our python UI into a react application in order to make the project accessable for apps to be able to use it. Along with that we want to make our UI more interactable which will take in more inputs like line of scrimmage, first down line, and other various things involved in a football game (score, team names, clock time). We also have a football moving on the screen but we want to be able to visually show the line of scrimmage and the first down line.  
