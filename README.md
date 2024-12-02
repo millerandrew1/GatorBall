@@ -30,3 +30,7 @@ Installation commands
 pip install localization
 pip install bleak
 pip install shapely
+
+#Effort Log
+Please disregard the effort log in this repo because you cannot see the comments made. The link for our effort log is here at this link below:
+https://docs.google.com/spreadsheets/d/1YpcHQpgFyinJQXn12217S25mA8S0SkYA/edit?usp=sharing&ouid=113765046292722749022&rtpof=true&sd=true
