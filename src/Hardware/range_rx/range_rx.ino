@@ -1,15 +1,12 @@
 #include "dw3000.h"
 #include "BluetoothSerial.h"
-<<<<<<< HEAD
 BluetoothSerial SerialBT;
-=======
->>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
 
 #define PIN_RST 27
 #define PIN_IRQ 34
 #define PIN_SS 4
 
-#define RNG_DELAY_MS 100
+#define RNG_DELAY_MS 1000
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
 #define ALL_MSG_COMMON_LEN 10
@@ -46,36 +43,26 @@ static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
 
-<<<<<<< HEAD
 void macStringToBytes(const char* macStr, uint8_t* macBytes) {
     sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
            &macBytes[0], &macBytes[1], &macBytes[2], 
            &macBytes[3], &macBytes[4], &macBytes[5]);
-=======
-BluetoothSerial btSerial;
-
-void multiSend(char * buffer, int size) {
-  for (int i = 0; i < size; i++) {
-    btSerial.write(buffer[i]);
-  }
->>>>>>> ced0322d905cb56854cb9aa870abe2dfb89821d0
 }
 
 void setup()
 {
   const char* serverAddress = "C0:3C:59:65:AA:E9"; 
-  const int serverChannel = 4; 
+const int serverChannel = 4; 
   Serial.begin(115200);
   SerialBT.begin("ESP32_Distance");  // Name of the ESP32 Bluetooth device
   Serial.println("Bluetooth initialized.");
 
-  uint8_t serverAddressBytes[6];
+uint8_t serverAddressBytes[6];
     macStringToBytes(serverAddress, serverAddressBytes);
 
     // Attempt to connect to the server
     if (SerialBT.connect(serverAddressBytes, serverChannel)) {
         Serial.println("Connected to Bluetooth server!");
-        print
     } else {
         Serial.println("Failed to connect to Bluetooth server.");
     }
@@ -130,10 +117,6 @@ void setup()
 
   Serial.println("Range RX");
   Serial.println("Setup over........");
-
-  btSerial.begin("Gatorball Tag");  //Bluetooth device name
-  btSerial.connect();
-  Serial.println("Bluetooth was set up");
 }
 
 void loop()
@@ -200,14 +183,8 @@ void loop()
         distance = tof * SPEED_OF_LIGHT;
 
         /* Display computed distance on LCD. */
-        snprintf(dist_str, sizeof(dist_str), "%3.2f\n", distance);
-        for (int i = 0; i < sizeof(dist_str); i++) {
-          btSerial.write(dist_str[i]);
-        }
-        btSerial.write('\n');
-        //btSerial.write(dist_str, sizeof(dist_str));
+        snprintf(dist_str, sizeof(dist_str), "DIST: %3.2f m", distance);
         test_run_info((unsigned char *)dist_str);
-        //multiSend((char *)&distance, 8);
       }
     }
   }
