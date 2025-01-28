@@ -93,6 +93,12 @@ void loop() {
             // Ensure the repsonse is the same
             if (memcmp(rx_buffer, rx_resp_msg, sizeof(rx_expected_msg)) == 0) {
                 // Calculate distance
+
+                // Get rx and tx timestamp
+                uint64_t rx_timestamp = dwt_readrxtimestamplo32();
+                uint64_t tx_timestamp = dwt_readtxtimestamplo32();
+
+                
             }
         }
 

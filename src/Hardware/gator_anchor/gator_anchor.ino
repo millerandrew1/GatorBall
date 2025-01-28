@@ -80,7 +80,12 @@ void loop() {
 
             // Ensure the repsonse is the same
             if (memcmp(rx_buffer, tx_poll_msg, sizeof(tx_poll_msg)) == 0) {
-                // Get and send time
+                // Get rx time
+                uint64_t rx_timestamp = get_rx_timestamp_u64();
+
+                // Calculate tx time
+                uint64 tx_timestamp = 
+
             }
         }
 
