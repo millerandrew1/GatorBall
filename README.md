@@ -11,6 +11,8 @@ This sprint we focued on getting the data from our tag to print to the UI. We tr
 
 Future plans for next sprint involve trying to incorporate a second anchor point so we can get a 2D position field instead of the 1D field we have now. We also need to make a PCB with the DW3000 and the ESP-32 along with including a power source. This will then need to be incorporated into a football. We also plan on transferring our python UI into a react application in order to make the project accessable for apps to be able to use it. Along with that we want to make our UI more interactable which will take in more inputs like line of scrimmage, first down line, and other various things involved in a football game (score, team names, clock time). We also have a football moving on the screen but we want to be able to visually show the line of scrimmage and the first down line.  
 
+# Sprint 3 1/13/2025 to 1/30/2025: Alpha Build
+This sprint we focused on several things in order to maximize our productivity. First we started working on the PCB that will go into the football and we are designing it on KiCad. We also ordered another anchor point to use as testing for our two anchor point postion triangulation. For our beta build if our PCB is not ready we want to use this extra anchor point as the football so we can start writing the code for it.  Next we updated our UI to be able to take in inputs and have the first down and line of scrimmage lines move depending on where the user wants the lines to be placed. We also are trying to use react to be able to host the program instead of python.
 
 # PROCESS FOR RUNNING CODE AND CONNECTING BLUETOOTH TO PC
 
