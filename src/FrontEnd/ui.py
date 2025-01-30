@@ -92,7 +92,6 @@ def main():
         canvas.delete("ball")
 
         # Place the football on the canvas
-        # Adjust these coordinates as needed
         canvas.create_image((distance + 110) * 4.5, 150, image=tk_ball_img,
                             anchor=tk.CENTER, tags="ball")
         
@@ -158,7 +157,7 @@ def main():
         update_first_down(yard_marker_val)
 
     def update_scrim(yard_val):
-        PIXELS_PER_YARD = 7
+        PIXELS_PER_YARD = 6
         LEFT_OFFSET = 70
 
         new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
@@ -166,7 +165,7 @@ def main():
         print(f"Blue line updated to yard {yard_val} at x={new_x}")
 
     def update_first_down(yard_val):
-        PIXELS_PER_YARD = 7
+        PIXELS_PER_YARD = 6
         LEFT_OFFSET = 70
 
         new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
