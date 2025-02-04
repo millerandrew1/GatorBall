@@ -1,0 +1,123 @@
+.football-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: lightblue;
+  padding: 20px;
+  height: 90vh;
+}
+
+/* Football Field */
+.field {
+  display: flex;
+  position: relative;
+  width: 90vw;
+  max-width: 1200px;
+  height: 300px;
+  background-color: green;
+  border: 5px solid white;
+  overflow: hidden;
+}
+
+/* End Zones */
+.end-zone {
+  width: 15%;
+  height: 100%;
+  background-color: blue;
+  color: orange;
+  font-size: 2vw;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  position: absolute;
+}
+
+.end-zone.left {
+  left: 0;
+}
+
+.end-zone.right {
+  right: 0;
+}
+
+/* Play Area */
+.play-area {
+  position: absolute;
+  left: 15%;
+  width: 70%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Yard Lines */
+.yard-lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.yard-line-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.yard-line {
+  width: 2px;
+  height: 100%;
+  background-color: white;
+}
+
+.yard-marker {
+  position: absolute;
+  top: 5%;
+  font-size: 1.5vw;
+  font-weight: bold;
+  color: white;
+}
+
+/* Ball (Moves Dynamically) */
+.ball {
+  position: absolute;
+  bottom: 30%;
+  width: 20px;
+  height: 20px;
+  background-color: black;
+  border-radius: 50%;
+  transition: left 0.5s ease-in-out;
+}
+
+/* First Down Marker */
+.first-down-marker {
+  position: absolute;
+  bottom: 10%;
+  width: 3px;
+  height: 100%;
+  background-color: red;
+  transition: left 0.5s ease-in-out;
+}
+
+/* Game Info Panel */
+.info-panel {
+  width: 80%;
+  max-width: 1000px;
+  background: white;
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.info-panel div {
+  margin: 5px 0;
+  font-size: 1.2em;
+}
