@@ -157,20 +157,52 @@ def main():
         update_first_down(yard_marker_val)
 
     def update_scrim(yard_val):
-        PIXELS_PER_YARD = 6
+        PIXELS_PER_YARD = 5.6
         LEFT_OFFSET = 70
+        RIGHT_OFFSET = 630
 
-        new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
+        if endzone_side == "left":
+            new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
+        else: # right offset
+            new_x = RIGHT_OFFSET - (yard_val * PIXELS_PER_YARD)
+
         canvas.coords(scrimmage_line_id, new_x, 0, new_x, 250)
         print(f"Blue line updated to yard {yard_val} at x={new_x}")
 
     def update_first_down(yard_val):
-        PIXELS_PER_YARD = 6
+        PIXELS_PER_YARD = 5.6
         LEFT_OFFSET = 70
+        RIGHT_OFFSET = 630
 
-        new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
+        if endzone_side == "left":
+            new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
+        else: # right offset
+            new_x = RIGHT_OFFSET - (yard_val * PIXELS_PER_YARD)
+
         canvas.coords(first_down_line_id, new_x, 0, new_x, 250)
         print(f"Red line updated to yard {yard_val} at x={new_x}")
+
+    def set_left(line):
+        nonlocal endzone_side
+        endzone_side = "left"
+        try:
+            scrim_val = int(line_of_scrimmage.get())
+            marker_val = int(first_down_marker.get())
+        except ValueError:
+            return  # If invalid, just ignore
+        update_scrim(scrim_val)
+        update_first_down(marker_val)
+
+    def set_right():
+        nonlocal endzone_side
+        endzone_side = "right"
+        try:
+            scrim_val = int(line_of_scrimmage.get())
+            marker_val = int(first_down_marker.get())
+        except ValueError:
+            return  # If invalid, just ignore
+        update_scrim(scrim_val)
+        update_first_down(marker_val)
 
     # ----------------------------------
     # Main GUI setup
@@ -182,6 +214,8 @@ def main():
 
     canvas = tk.Canvas(root, width=700, height=250, bg="lightgreen", highlightthickness=0)
     canvas.place(x=50, y=50)
+
+    endzone_side = "left" # Default to left
 
     update_screen()
 
@@ -262,6 +296,12 @@ def main():
 
     save_button = tk.Button(root, text="Save", command=save_edit, font=("Helvetica", 12))
     save_button.place(x=120, y=460)
+
+    left_button = tk.Button(root, text="Left", command=set_left, font=("Helvetica", 12))
+    left_button.place(x=190, y=460)
+
+    right_button = tk.Button(root, text="Right", command=set_right, font=("Helvetica", 12))
+    right_button.place(x=250, y=460)
 
     # Serial reading thread
     serial_thread = Thread(target=read_in_serial, daemon=True)
