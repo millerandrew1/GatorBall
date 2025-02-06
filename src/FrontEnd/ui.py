@@ -11,24 +11,30 @@ q = queue.Queue()
 global distance
 distance = 0
 
+global started
+started = False
+
 def main():
     def update_values_from_serial():
         """Update values dynamically from the queue."""
         while not q.empty():
             try:
                 global distance
+                global started
                 distance = q.get_nowait()
                 yd_line = f"{distance:.3f} yards"
 
                 # Example updates
-                possession.set("Team A")
-                line_of_scrimmage.set("50")
-                first_down_marker.set("25")
-                yards_to_gain.set("10 yards")
-                score.set("Home: 14 - Away: 7")
-                play_clock.set("25")
-                game_clock.set("12:00")
-                quarter.set("2nd")
+                if not started:
+                    started = True
+                    possession.set("Team A")
+                    line_of_scrimmage.set("50")
+                    first_down_marker.set("25")
+                    yards_to_gain.set("10 yards")
+                    score.set("Home: 14 - Away: 7")
+                    play_clock.set("25")
+                    game_clock.set("12:00")
+                    quarter.set("2nd")
 
                 ball_pos.set(yd_line)
 
@@ -152,10 +158,6 @@ def main():
             )
             return
 
-        # Update if both are valid
-        update_scrim(yard_scrim_val)
-        update_first_down(yard_marker_val)
-
     def update_scrim(yard_val):
         PIXELS_PER_YARD = 5.6
         LEFT_OFFSET = 70
@@ -182,26 +184,96 @@ def main():
         canvas.coords(first_down_line_id, new_x, 0, new_x, 250)
         print(f"Red line updated to yard {yard_val} at x={new_x}")
 
-    def set_left(line):
+    def set_left_scrim():
         nonlocal endzone_side
         endzone_side = "left"
+
         try:
             scrim_val = int(line_of_scrimmage.get())
-            marker_val = int(first_down_marker.get())
+            # marker_val = int(first_down_marker.get())
         except ValueError:
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter an integer from 0 to 50 for the line of scrimmage."
+            )
             return  # If invalid, just ignore
+        if (scrim_val < 0) or (scrim_val > 50):
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter a number from 0 to 50 for the line of scrimmage."
+            )
+            return
+        
         update_scrim(scrim_val)
-        update_first_down(marker_val)
+        # update_first_down(marker_val)
 
-    def set_right():
+    def set_right_scrim():
         nonlocal endzone_side
         endzone_side = "right"
+
         try:
             scrim_val = int(line_of_scrimmage.get())
+            # marker_val = int(first_down_marker.get())
+        except ValueError:
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter an integer from 0 to 50 for the line of scrimmage."
+            )
+            return  # If invalid, just ignore
+        if (scrim_val < 0) or (scrim_val > 50):
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter a number from 0 to 50 for the line of scrimmage."
+            )
+            return
+
+        update_scrim(scrim_val)
+        # update_first_down(marker_val)
+
+    def set_left_fdm():
+        nonlocal endzone_side
+        endzone_side = "left"
+
+        try:
+            # scrim_val = int(line_of_scrimmage.get())
             marker_val = int(first_down_marker.get())
         except ValueError:
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter an integer from 0 to 50 for the first down marker."
+            )
             return  # If invalid, just ignore
-        update_scrim(scrim_val)
+        if (marker_val < 0) or (marker_val > 50):
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter an integer from 0 to 50 for the first down marker."
+            )
+            return
+
+        # update_scrim(scrim_val)
+        update_first_down(marker_val)
+
+    def set_right_fdm():
+        nonlocal endzone_side
+        endzone_side = "right"
+        
+        try:
+            # scrim_val = int(line_of_scrimmage.get())
+            marker_val = int(first_down_marker.get())
+        except ValueError:
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter an integer from 0 to 50 for the first down marker."
+            )
+            return  # If invalid, just ignore
+        if (marker_val < 0) or (marker_val > 50):
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter an integer from 0 to 50 for the first down marker."
+            )
+            return
+
+        # update_scrim(scrim_val)
         update_first_down(marker_val)
 
     # ----------------------------------
@@ -209,7 +281,7 @@ def main():
     # ----------------------------------
     root = tk.Tk()
     root.title("GatorBall")
-    root.geometry("900x600")
+    root.geometry("900x580")
     root.configure(bg="lightblue")
 
     canvas = tk.Canvas(root, width=700, height=250, bg="lightgreen", highlightthickness=0)
@@ -266,19 +338,19 @@ def main():
     entry_possession.place(x=250, y=350)
 
     label_line_of_scrimmage = tk.Label(root, text="Line of Scrimmage:", font=("Helvetica", 12), bg="lightblue")
-    label_line_of_scrimmage.place(x=50, y=380)
+    label_line_of_scrimmage.place(x=50, y=410)
     entry_line_of_scrimmage = tk.Entry(root, textvariable=line_of_scrimmage, font=("Helvetica", 12), state="disabled")
-    entry_line_of_scrimmage.place(x=250, y=380)
+    entry_line_of_scrimmage.place(x=250, y=410)
 
     label_distance_anchor = tk.Label(root, text="Distance from anchor point:", font=("Helvetica", 12), bg="lightblue")
-    label_distance_anchor.place(x=50, y=410)
+    label_distance_anchor.place(x=50, y=380)
     entry_ball_pos = tk.Entry(root, textvariable=ball_pos, font=("Helvetica", 12), state="disabled")
-    entry_ball_pos.place(x=250, y=410)
+    entry_ball_pos.place(x=250, y=380)
 
     label_first_down_marker = tk.Label(root, text="First Down Marker:", font=("Helvetica", 12), bg="lightblue")
-    label_first_down_marker.place(x=450, y=350)
+    label_first_down_marker.place(x=450, y=410)
     entry_first_down_marker = tk.Entry(root, textvariable=first_down_marker, font=("Helvetica", 12), state="disabled")
-    entry_first_down_marker.place(x=600, y=350)
+    entry_first_down_marker.place(x=600, y=410)
 
     label_yards_to_gain = tk.Label(root, text="Yards To Gain:", font=("Helvetica", 12), bg="lightblue")
     label_yards_to_gain.place(x=450, y=380)
@@ -286,22 +358,28 @@ def main():
     entry_yards_to_gain.place(x=600, y=380)
 
     label_score = tk.Label(root, text="Score:", font=("Helvetica", 12), bg="lightblue")
-    label_score.place(x=450, y=410)
+    label_score.place(x=450, y=350)
     entry_score = tk.Entry(root, textvariable=score, font=("Helvetica", 12), state="disabled")
-    entry_score.place(x=600, y=410)
+    entry_score.place(x=600, y=350)
 
     # Buttons
-    edit_button = tk.Button(root, text="Edit", command=enable_edit, font=("Helvetica", 12))
-    edit_button.place(x=50, y=460)
+    edit_button = tk.Button(root, text="Edit", command=enable_edit, font=("Helvetica", 20))
+    edit_button.place(x=370, y=500)
 
-    save_button = tk.Button(root, text="Save", command=save_edit, font=("Helvetica", 12))
-    save_button.place(x=120, y=460)
+    save_button = tk.Button(root, text="Save", command=save_edit, font=("Helvetica", 20))
+    save_button.place(x=470, y=500)
 
-    left_button = tk.Button(root, text="Left", command=set_left, font=("Helvetica", 12))
-    left_button.place(x=190, y=460)
+    left_button_scrim = tk.Button(root, text="Left", command=set_left_scrim, font=("Helvetica", 14))
+    left_button_scrim.place(x=290, y=440)
 
-    right_button = tk.Button(root, text="Right", command=set_right, font=("Helvetica", 12))
-    right_button.place(x=250, y=460)
+    right_button_scrim = tk.Button(root, text="Right", command=set_right_scrim, font=("Helvetica", 14))
+    right_button_scrim.place(x=350, y=440)
+
+    left_button_fdm = tk.Button(root, text="Left", command=set_left_fdm, font=("Helvetica", 14))
+    left_button_fdm.place(x=650, y=440)
+
+    right_button_fdm = tk.Button(root, text="Right", command=set_right_fdm, font=("Helvetica", 14))
+    right_button_fdm.place(x=710, y=440)
 
     # Serial reading thread
     serial_thread = Thread(target=read_in_serial, daemon=True)
