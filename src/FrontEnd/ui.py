@@ -43,7 +43,7 @@ def main():
 
         root.after(100, update_values_from_serial)
 
-    def read_in_serial():
+    def read_in_serial(): # NEW COM PORT IS COM5/115200
         """Read data from the serial port in a background thread."""
         try:
             ser = serial.Serial('COM10', 115200)  # CHANGE COM PORT as needed
@@ -107,7 +107,7 @@ def main():
         root.after(50, update_screen)
 
     # ----------------------------------------------------------------
-    # Functions for enabling, disabling fields, and validating input
+    # Helper functions
     # ----------------------------------------------------------------
     def enable_edit():
         entry_possession.config(state="normal")
@@ -157,6 +157,9 @@ def main():
                 "Please enter a number from 0 to 50 for the first down marker."
             )
             return
+
+        yards_to_gain_val = abs(yard_marker_val - yard_scrim_val)
+        yards_to_gain.set(f"{yards_to_gain_val}")
 
     def update_scrim(yard_val):
         PIXELS_PER_YARD = 5.6
@@ -391,3 +394,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# TODO:
+# 1). Automatically update yards to gain (first down - LOS)
+# 2). Sample every 20 points to produce an averaged distance 
+# 3). Save previous position data for the ball and display in some menu
