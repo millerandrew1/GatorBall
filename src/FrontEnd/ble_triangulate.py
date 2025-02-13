@@ -2,7 +2,6 @@ import asyncio
 import numpy as np
 import localization as lx
 import server_bt
-#import client_bt
 from bleak import BleakScanner
 from bleak import BleakClient
 
@@ -18,7 +17,6 @@ from bleak import BleakClient
 # Future tasks to develop - 
 # Programming the ESP32 with DWM3000 for transmitting data to each other
 # Calculation for determining postions
-
 async def find():  #example for finding devices, useful for testing and finding given address
     devices = await BleakScanner.discover()
     for d in devices:
@@ -36,15 +34,18 @@ async def connect(address):
 #main information we will need from the anchors would be the distance to the ball since achors will be at fixed locations on the field
 #we would need to break down the field into an xy plane, a simple way to do this would be to treat the values for calculation as
 #the yardage values
-loc = 0 
-P=lx.Project(mode='2D',solver='LSE') 
+
 def calculate():
-    a_x = input("A x value = ")
-    a_y = input("A y value = ")
-    b_x = input("B x value = ")
-    b_y = input("B y value = ")
-    a_dist= input("A to point = ")
-    b_dist = input("B to points = ")
+    global P 
+    global loc
+    global y
+    P=lx.Project(mode='2D',solver='LSE') 
+    a_x = 0 #input("A x value = ")
+    a_y = 0  #input("A y value = ")
+    b_x = 0 #input("B x value = ")
+    b_y = 100 #input("B y value = ")
+    a_dist= 50 #input("A to point = ")
+    b_dist = 50 #input("B to points = ")
     
     a_x = int(a_x)
     a_y = int(a_y)
@@ -66,17 +67,23 @@ def calculate():
     P.solve()
 
 # Then the target location is:
+# You can get each value by using loc.x, loc.y, depeding on anchor locations either could be used to determine spot
     loc = t.loc
+    y = float(loc.y)
     print(loc)
 
 def updateLoc(a,b):
+    global loc
+    global y
     t,label=P.add_target()
 
     t.add_measure('anchore_A', a)
     t.add_measure('anchore_B',b)
+
     P.solve()
 
     loc = t.loc
+    y = float(loc.y)
     print(loc)
 
 
@@ -84,24 +91,28 @@ def updateLoc(a,b):
 
 #asyncio.run(connect(address))
 #asyncio.run(find())
-calculate()
 
+def init(): # initialize server and triangulation data
+    calculate()
+    server_bt.server_init()
 
-server_bt.server_init()
-
-
-game = True
-while game == True:
+def recv_update(): #call this to get new values from client 
+    server_bt.server_send("Go")
     server_bt.recv_message()
 
     updateLoc(server_bt.a, server_bt.b)
 
-    game_status = input("Is game over(1 if not over)?: ")
-    game_status = int(game_status)
+    game_status = 1
+    game = int(game_status)
 
-    if game_status == 1:
-        continue
+    if game == 1:
+        server_bt.server_send(game_status)
     else:
-        break
+        server_bt.server_send(game_status)
+        server_bt.close()
 
-server_bt.close()
+def close():
+    server_bt.close()
+
+#calculate()
+#print(y)
