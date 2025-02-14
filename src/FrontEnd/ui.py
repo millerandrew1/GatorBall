@@ -14,6 +14,12 @@ distance = 0
 global started
 started = False
 
+global scrim_is_left
+global fdm_is_left
+
+global ytg_scrim_val
+global ytg_fdm_val
+
 def main():
     def update_values_from_serial():
         """Update values dynamically from the queue."""
@@ -144,27 +150,43 @@ def main():
         # Validate the red line (first_down_marker)
         marker_raw = first_down_marker.get()
         try:
-            yard_marker_val = int(marker_raw)
+            yard_fdm_val = int(marker_raw)
         except ValueError:
             messagebox.showerror(
                 "Invalid Input",
                 "Please enter an integer between 0 and 50 for the first down marker."
             )
             return
-        if yard_marker_val < 0 or yard_marker_val > 50:
+        if yard_fdm_val < 0 or yard_fdm_val > 50:
             messagebox.showerror(
                 "Invalid Input",
                 "Please enter a number from 0 to 50 for the first down marker."
             )
             return
 
-        yards_to_gain_val = abs(yard_marker_val - yard_scrim_val)
+        # EDGE CASE: 
+        # LEFT LEFT -> normal
+        # RIGHT LEFT/LEFT RIGHT -> SUBRACT 50 FROM BOTH THEN SUM
+        global ytg_scrim_val
+        global ytg_fdm_val
+        global scrim_is_left
+        global fdm_is_left
+
+        if (scrim_is_left and fdm_is_left) or (not scrim_is_left and not fdm_is_left): # both left or both right
+            yards_to_gain_val = abs(yard_scrim_val - yard_fdm_val)
+        else:
+            yards_to_gain_val = abs(ytg_scrim_val + ytg_fdm_val)
+
         yards_to_gain.set(f"{yards_to_gain_val}")
+        
 
     def update_scrim(yard_val):
         PIXELS_PER_YARD = 5.6
         LEFT_OFFSET = 70
         RIGHT_OFFSET = 630
+
+        global ytg_scrim_val
+        ytg_scrim_val = abs(50 - yard_val)
 
         if endzone_side == "left":
             new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
@@ -179,6 +201,9 @@ def main():
         LEFT_OFFSET = 70
         RIGHT_OFFSET = 630
 
+        global ytg_fdm_val
+        ytg_fdm_val = abs(50 - yard_val)
+
         if endzone_side == "left":
             new_x = LEFT_OFFSET + (yard_val * PIXELS_PER_YARD)
         else: # right offset
@@ -190,6 +215,9 @@ def main():
     def set_left_scrim():
         nonlocal endzone_side
         endzone_side = "left"
+
+        global scrim_is_left
+        scrim_is_left = True
 
         try:
             scrim_val = int(line_of_scrimmage.get())
@@ -214,6 +242,9 @@ def main():
         nonlocal endzone_side
         endzone_side = "right"
 
+        global scrim_is_left 
+        scrim_is_left = False
+
         try:
             scrim_val = int(line_of_scrimmage.get())
             # marker_val = int(first_down_marker.get())
@@ -237,6 +268,9 @@ def main():
         nonlocal endzone_side
         endzone_side = "left"
 
+        global fdm_is_left
+        fdm_is_left = True
+
         try:
             # scrim_val = int(line_of_scrimmage.get())
             marker_val = int(first_down_marker.get())
@@ -259,6 +293,9 @@ def main():
     def set_right_fdm():
         nonlocal endzone_side
         endzone_side = "right"
+
+        global fdm_is_left
+        fdm_is_left = False
         
         try:
             # scrim_val = int(line_of_scrimmage.get())
