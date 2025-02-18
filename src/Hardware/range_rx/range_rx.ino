@@ -1,6 +1,9 @@
 #include "dw3000.h"
+<<<<<<< HEAD
+=======
 #include "BluetoothSerial.h"
 BluetoothSerial SerialBT;
+>>>>>>> 63d5399fb3e58e7569c9cbc3e4d79e1ddffcf113
 
 #define PIN_RST 27
 #define PIN_IRQ 34
@@ -43,6 +46,10 @@ static double tof;
 static double distance;
 extern dwt_txconfig_t txconfig_options;
 
+<<<<<<< HEAD
+void setup()
+{
+=======
 void macStringToBytes(const char* macStr, uint8_t* macBytes) {
     sscanf(macStr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
            &macBytes[0], &macBytes[1], &macBytes[2], 
@@ -68,6 +75,7 @@ void setup()
         Serial.println("Failed to connect to Bluetooth server.");
     }
 
+>>>>>>> 63d5399fb3e58e7569c9cbc3e4d79e1ddffcf113
   UART_init();
 
   spiBegin(PIN_IRQ, PIN_RST);
@@ -122,9 +130,12 @@ void setup()
 
 void loop()
 {
+<<<<<<< HEAD
+=======
   if (!SerialBT.hasClient()) {
     SerialBT.begin("ESP32_Distance"); // Reconnect if disconnected
 }
+>>>>>>> 63d5399fb3e58e7569c9cbc3e4d79e1ddffcf113
   /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
   tx_poll_msg[ALL_MSG_SN_IDX] = frame_seq_nb;
   dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS_BIT_MASK);
@@ -197,4 +208,8 @@ void loop()
 
   /* Execute a delay between ranging exchanges. */
   Sleep(RNG_DELAY_MS);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 63d5399fb3e58e7569c9cbc3e4d79e1ddffcf113
