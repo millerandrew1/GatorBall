@@ -18,10 +18,24 @@ const Data = () => {
     // Simulate dynamic updates (replace with actual data fetching)
     const interval = setInterval(() => {
       const randomYards = Math.random() * 100;
+      const currentYards =
+        randomYards > 50
+          ? 100 - Math.floor(randomYards)
+          : Math.floor(randomYards);
+      const firstDownYards =
+        randomYards + 10 > 50
+          ? 100 - Math.floor(randomYards + 10)
+          : Math.floor(randomYards + 10);
+
+      const outcome =
+        firstDownYards <= 0 || firstDownYards >= 100
+          ? "TOUCHDOWN"
+          : `${Math.floor(firstDownYards)}-yard line`;
+
       setDistance(randomYards);
-      setLineOfScrimmage(`${Math.floor(randomYards)}-yard line`);
-      setCurrentYardLine(`${Math.floor(randomYards)}-yard line`);
-      setFirstDownMarker(`${Math.floor(randomYards + 10)}-yard line`);
+      setLineOfScrimmage(`${Math.floor(currentYards)}-yard line`);
+      setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
+      setFirstDownMarker(outcome);
       setYardsToGain("10 yards");
       setScore("Home: 14 - Away: 7");
       setPlayClock("25");
@@ -44,22 +58,28 @@ const Data = () => {
           {/* Play Area */}
           <div className="play-area">
             {/* Yard Lines */}
+            {/* Yard Lines */}
             <div className="yard-lines">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="yard-line-container">
-                  <div className="yard-line"></div>
-                  <div className="yard-marker">{i * 10}</div>
-                </div>
-              ))}
+              {["10", "20", "30", "40", "50", "40", "30", "20", "10"].map(
+                (yard, i) => (
+                  <div key={i} className="yard-line-container">
+                    <div className="yard-line"></div>
+                    <div className="yard-marker">{yard}</div>
+                  </div>
+                )
+              )}
             </div>
-
-            {/* Moving Ball */}
-            <div className="ball" style={{ left: `${distance}%` }}></div>
 
             {/* First Down Marker */}
             <div
               className="first-down-marker"
               style={{ left: `${distance + 10}%` }}
+            ></div>
+
+            {/* Current Yard Marker */}
+            <div
+              className="current-yard-marker"
+              style={{ left: `${distance}%` }}
             ></div>
           </div>
 

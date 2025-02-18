@@ -99,7 +99,14 @@
 /* First Down Marker */
 .first-down-marker {
   position: absolute;
-  bottom: 10%;
+  width: 3px;
+  height: 100%;
+  background-color: yellow;
+  transition: left 0.5s ease-in-out;
+}
+
+.current-yard-marker {
+  position: absolute;
   width: 3px;
   height: 100%;
   background-color: red;
