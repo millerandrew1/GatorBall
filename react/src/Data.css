@@ -128,3 +128,80 @@
   margin: 5px 0;
   font-size: 1.2em;
 }
+
+/*Score Buttons*/
+.score-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  margin: 20px auto;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  position: absolute;
+  background-color: white;
+  min-width: 160px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.scoreOption {
+  padding: 10px;
+  background: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scoreOption:hover {
+  background: #ddd;
+}
+
+.undo {
+  background-color: rgb(200, 70, 70);
+}
+
+.undo:hover {
+  background-color: rgb(198, 134, 134);
+  border-color: black;
+  border-radius: 14px;
+}
+
+.scoreButton {
+  font-size: 14px; /* Slightly smaller font */
+  padding: 8px 16px; /* Smaller padding */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.undoButton {
+  font-size: 14px; /* Slightly smaller font */
+  padding: 8px 16px; /* Smaller padding */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scoreButton::after {
+  content: "▼"; /* Adds dropdown arrow */
+  font-size: 10px; /* Makes the arrow smaller */
+  margin-left: 5px; /* Spaces it from the text */
+}

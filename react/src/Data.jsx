@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./Data.css";
 
 const Data = () => {
@@ -9,10 +9,18 @@ const Data = () => {
   const [currentYardLine, setCurrentYardLine] = useState("N/A");
   const [firstDownMarker, setFirstDownMarker] = useState("N/A");
   const [yardsToGain, setYardsToGain] = useState("N/A");
-  const [score, setScore] = useState("N/A");
+  const [score, setScore] = useState({ home: 0, away: 0 });
   const [playClock, setPlayClock] = useState("N/A");
   const [gameClock, setGameClock] = useState("N/A");
   const [quarter, setQuarter] = useState("N/A");
+  const [lastScore, setLastScore] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState({
+    home: false,
+    away: false,
+  });
+
+  const homeDropdownRef = useRef(null);
+  const awayDropdownRef = useRef(null);
 
   useEffect(() => {
     // Simulate dynamic updates (replace with actual data fetching)
@@ -37,7 +45,9 @@ const Data = () => {
       setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
       setFirstDownMarker(outcome);
       setYardsToGain("10 yards");
-      setScore("Home: 14 - Away: 7");
+      {
+        /*setScore("Home: 14 - Away: 7");*/
+      }
       setPlayClock("25");
       setGameClock("12:35");
       setQuarter("2nd");
@@ -45,6 +55,58 @@ const Data = () => {
     }, 3000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  const scoringOptions = [
+    { label: "Touchdown (6)", points: 6 },
+    { label: "Extra Point (1)", points: 1 },
+    { label: "Two-Point Conversion (2)", points: 2 },
+    { label: "Field Goal (3)", points: 3 },
+    { label: "Safety (2)", points: 2 },
+  ];
+
+  const toggleDropdown = (team) => {
+    setDropdownOpen((prev) => ({
+      home: team === "home" ? !prev.home : false,
+      away: team === "away" ? !prev.away : false,
+    }));
+  };
+
+  const updateScore = (team, points) => {
+    setScore((prev) => {
+      const newScore = { ...prev, [team]: prev[team] + points };
+      setLastScore({ team, points });
+      return newScore;
+    });
+    setDropdownOpen({ home: false, away: false });
+  };
+
+  const undoLastScore = () => {
+    if (lastScore) {
+      setScore((prev) => ({
+        ...prev,
+        [lastScore.team]: prev[lastScore.team] - lastScore.points,
+      }));
+      setLastScore(null);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        homeDropdownRef.current &&
+        !homeDropdownRef.current.contains(event.target) &&
+        awayDropdownRef.current &&
+        !awayDropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen({ home: false, away: false });
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -89,31 +151,85 @@ const Data = () => {
 
         {/* Game Info */}
         <div className="info-panel">
-          <div>
+          <div className="info-section">
             <strong>Possession:</strong> {possession}
           </div>
-          <div>
+          <div className="info-section">
             <strong>Line of Scrimmage:</strong> {lineOfScrimmage}
           </div>
-          <div>
+          <div className="info-section">
             <strong>Current Yard Line:</strong> {currentYardLine}
           </div>
-          <div>
+          <div className="info-section">
             <strong>First Down Marker:</strong> {firstDownMarker}
           </div>
-          <div>
+          <div className="info-section">
             <strong>Yards To Gain:</strong> {yardsToGain}
           </div>
-          <div>
-            <strong>Score:</strong> {score}
+          <div className="info-section">
+            <strong>Score:</strong> Home {score.home} - Away {score.away}
           </div>
-          <div>
+
+          {/*Score Buttons*/}
+          <div className="score-container">
+            {/* Home Score Dropdown */}
+            <div className="dropdown" ref={homeDropdownRef}>
+              <button
+                className="scoreButton"
+                onClick={() => toggleDropdown("home")}
+              >
+                Home Score
+              </button>
+              {dropdownOpen.home && (
+                <div className="dropdown-content">
+                  {scoringOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      className="scoreOption"
+                      onClick={() => updateScore("home", option.points)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Away Score Dropdown */}
+            <div className="dropdown" ref={awayDropdownRef}>
+              <button
+                className="scoreButton"
+                onClick={() => toggleDropdown("away")}
+              >
+                Away Score
+              </button>
+              {dropdownOpen.away && (
+                <div className="dropdown-content">
+                  {scoringOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      className="scoreOption"
+                      onClick={() => updateScore("away", option.points)}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button className="undoButton undo" onClick={undoLastScore}>
+              Undo Last Score
+            </button>
+          </div>
+
+          <div className="info-section">
             <strong>Play Clock:</strong> {playClock}
           </div>
-          <div>
+          <div className="info-section">
             <strong>Game Clock:</strong> {gameClock}
           </div>
-          <div>
+          <div className="info-section">
             <strong>Quarter:</strong> {quarter}
           </div>
         </div>
