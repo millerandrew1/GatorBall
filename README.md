@@ -15,7 +15,7 @@ Future plans for next sprint involve trying to incorporate a second anchor point
 This sprint we focused on several things in order to maximize our productivity. First we started working on the PCB that will go into the football and we are designing it on KiCad. We also ordered another anchor point to use as testing for our two anchor point postion triangulation. For our beta build if our PCB is not ready we want to use this extra anchor point as the football so we can start writing the code for it.  Next we updated our UI to be able to take in inputs and have the first down and line of scrimmage lines move depending on where the user wants the lines to be placed. We also are trying to use react to be able to host the program instead of python.
 
 # Sprint 4 1/31/2025 to 2/21/2025
-This sprint we continued to add features to the UI. We allowed the 
+This sprint we continued to add features to the UI. We allowed the user to select which side of the field the line of scrimmage and first down markers were. We also made the lines scaled better and we created a formula to make the football move to scale as it would on a real field. We designed our PCB and ordered it and continued to wrok on the React application. We also designed and printed pylons for the anchor points. 
 
 # PROCESS FOR RUNNING CODE AND CONNECTING BLUETOOTH TO PC
 
