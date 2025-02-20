@@ -17,18 +17,18 @@ from bleak import BleakClient
 # Future tasks to develop - 
 # Programming the ESP32 with DWM3000 for transmitting data to each other
 # Calculation for determining postions
-async def find():  #example for finding devices, useful for testing and finding given address
-    devices = await BleakScanner.discover()
-    for d in devices:
-        print(d)
+# async def find():  #example for finding devices, useful for testing and finding given address
+#     devices = await BleakScanner.discover()
+#     for d in devices:
+#         print(d)
 
 address = "FC:AA:81:A7:50:28"  #find address of our modules, this is just a filler for now from an example
 MODEL_NBR_UUID = "2A24"
 
-async def connect(address):
-    async with BleakClient(address) as client:
-        model_number = await client.read_gatt_char(MODEL_NBR_UUID)
-        print("Model Number: {0}".format("".join(map(chr, model_number))))
+# async def connect(address):
+#     async with BleakClient(address) as client:
+#         model_number = await client.read_gatt_char(MODEL_NBR_UUID)
+#         print("Model Number: {0}".format("".join(map(chr, model_number))))
 
 #currently this gets user inputs in the place of actual information from anchors since we are limited by not having hardware
 #main information we will need from the anchors would be the distance to the ball since achors will be at fixed locations on the field
@@ -92,27 +92,27 @@ def updateLoc(a,b):
 #asyncio.run(connect(address))
 #asyncio.run(find())
 
-def init(): # initialize server and triangulation data
-    calculate()
-    server_bt.server_init()
+# def init(): # initialize server and triangulation data
+#     calculate()
+#     server_bt.server_init()
 
-def recv_update(): #call this to get new values from client 
-    server_bt.server_send("Go")
-    server_bt.recv_message()
+# def recv_update(): #call this to get new values from client 
+#     server_bt.server_send("Go")
+#     server_bt.recv_message()
 
-    updateLoc(server_bt.a, server_bt.b)
+#     updateLoc(server_bt.a, server_bt.b)
 
-    game_status = 1
-    game = int(game_status)
+#     game_status = 1
+#     game = int(game_status)
 
-    if game == 1:
-        server_bt.server_send(game_status)
-    else:
-        server_bt.server_send(game_status)
-        server_bt.close()
+#     if game == 1:
+#         server_bt.server_send(game_status)
+#     else:
+#         server_bt.server_send(game_status)
+#         server_bt.close()
 
-def close():
-    server_bt.close()
+# def close():
+#     server_bt.close()
 
 #calculate()
 #print(y)

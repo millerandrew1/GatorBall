@@ -3,7 +3,10 @@ from threading import Thread
 import queue
 import serial
 from PIL import Image, ImageTk
-from tkinter import messagebox  # For pop-up warnings
+from tkinter import messagebox  
+# import ble_triangulate as triangulate
+import localization as lx
+import math
 
 # Create a queue to safely pass data between threads
 q = queue.Queue()
@@ -20,14 +23,29 @@ global fdm_is_left
 global ytg_scrim_val
 global ytg_fdm_val
 
+# Triangulation
+global P
+global loc
+global x
+global y
+
 def main():
     def update_values_from_serial():
         """Update values dynamically from the queue."""
         while not q.empty():
             try:
                 global distance
+                global loc
+                global x
+                global y
                 global started
+
                 distance = q.get_nowait()
+                print("EXECUTING JAIODHAIUKSGHDKJWB")
+                distance *= 1.093
+
+                print(f"DISTANCE: {distance}")
+
                 yd_line = f"{distance:.3f} yards"
 
                 # Example updates
@@ -43,33 +61,103 @@ def main():
                     quarter.set("2nd")
 
                 ball_pos.set(yd_line)
+                print(f"THIS IS {ball_pos}")
 
             except Exception as e:
                 print(f"Error updating values: {e}")
 
-        root.after(100, update_values_from_serial)
+        root.after(100, update_values_from_serial) # FIXME change back to 100?
 
-    def read_in_serial(): # NEW COM PORT IS COM5/115200
+    # ESP32 -> COM5
+    # ESP3212 -> COM6
+    def read_in_serial(): 
+        
         """Read data from the serial port in a background thread."""
+        global P
+        global loc
+        global x
+        global y
         try:
-            ser = serial.Serial('COM10', 115200)  # CHANGE COM PORT as needed
-            ser.timeout = 5
+            ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
+            ser2 = serial.Serial('COM6', 115200)
+            ser1.timeout = 5
+            ser2.timeout = 5
             print('Serial port opened')
 
+            P=lx.Project(mode='2D',solver='LSE') 
+            # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
+            a_x = int(0)
+            a_y = int(0)
+            b_x = int(5) # b
+            b_y = int(0)
+
+            P.add_anchor('anchor_A',(a_x,a_y))
+            P.add_anchor('anchor_B',(b_x,b_y))
+
+            t,label=P.add_target()
+
             while True:
-                if ser.in_waiting > 0:
-                    data = ser.readline().decode('utf-8').strip()
-                    try:
-                        if float(data):
-                            global distance
-                            distance = float(data)
-                            # Convert to yards
-                            distance_yd = distance * 1.093
-                            distance = distance_yd
-                            print(f"DISTANCE IN YARDS: {distance}")
-                            q.put(distance)
-                    except ValueError:
-                        pass
+                if ser1.in_waiting > 0 and ser2.in_waiting > 0:
+                        a = ser1.readline().decode('utf-8').strip() # a
+                        c = ser2.readline().decode('utf-8').strip() # c
+                        print(f"THIS IS a: {a}")
+                        print(f"THIS IS c: {c}")
+
+                        # if a and c:
+                            # try:
+                            #     fa = float(a)
+                            #     fc = float(c)
+                            #     print(fa)
+                            #     print(fc)
+                            # except: 
+                            #     print("cant convert a or c to float")
+
+                        try:
+                                # if fa != 0.0 and fc != 0.0:
+                                    # global distance
+                                    # distance = float(data)
+                                    # # Convert to yards
+                                    # distance_yd = distance * 1.093
+                                    # distance = distance_yd
+                                    # print(f"DISTANCE IN YARDS: {distance}")
+                                    # q.put(distance)
+                                    # triangulate.updateLoc(a,c)
+
+                                    # arccos( (c^2) - (a^2) - (b^2)) / (-2ab)
+
+                                    # manually do the math
+                                    # a = float(a)
+                                    # b_x = float(b_x)
+                                    # c = float(c)
+                                    # ang_theta = math.acos( ((c*c) - (a*a) - (b_x*b_x))  / (-2*a*b_x) )
+                                    # print(f"THIS IS ang_theta: {ang_theta}")
+
+                                    # new_dist_x = a * math.cos(ang_theta) * 1.093
+                                    # print(f"THIS IS new_dist: {new_dist_x}")
+
+                                t.add_measure('anchor_A',a)
+                                t.add_measure('anchor_B',c)
+
+                                P.solve()
+                                loc = t.loc
+                                    # global x
+                                    # global y
+                                    # x = float(loc.x)
+                                    # y = float(loc.y)
+                                    # print(f"loc: {loc}")
+                                    # print(f"x: {x}")
+                                    # print(f"y: {y}")    
+
+                                    # q.put(new_dist_x)
+                                q.put(loc.x)
+                                    # break
+                                    # now we should have the values in the queue
+                        except Exception as e:
+                            print(f"HAPPENING HERE: {e}")
+                        # else:
+                        #     print("skipping b/c a and c are invalid")
+                        #     break
+
         except Exception as e:
             print(f"Error reading serial: {e}")
 
@@ -103,7 +191,8 @@ def main():
         # Clear old football
         canvas.delete("ball")
 
-        # Place the football on the canvas
+        # Place the football on the canvas FIXME change loc.x back to distance
+        global vals
         canvas.create_image((distance + 110) * 4.5, 150, image=tk_ball_img,
                             anchor=tk.CENTER, tags="ball")
         
@@ -121,7 +210,6 @@ def main():
         entry_first_down_marker.config(state="normal")
         entry_yards_to_gain.config(state="normal")
         entry_score.config(state="normal")
-        # ball_pos remains disabled
 
     def save_edit():
         entry_possession.config(state="disabled")
@@ -359,6 +447,7 @@ def main():
     game_clock = tk.StringVar()
     quarter = tk.StringVar()
     ball_pos = tk.StringVar()
+    ball_x_new = tk.StringVar()
 
     # Initial
     possession.set("N/A")
@@ -433,6 +522,8 @@ if __name__ == "__main__":
     main()
 
 # TODO:
-# 1). Automatically update yards to gain (first down - LOS)
 # 2). Sample every 20 points to produce an averaged distance 
 # 3). Save previous position data for the ball and display in some menu
+# START/STOP functionality for each play
+# Display a few of the previous positions of the ball on the interface
+#   Export positions for each play to CSV?
