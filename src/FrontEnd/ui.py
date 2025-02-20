@@ -4,8 +4,6 @@ import queue
 import serial
 from PIL import Image, ImageTk
 from tkinter import messagebox  
-# import ble_triangulate as triangulate
-import localization as lx
 import math
 
 # Create a queue to safely pass data between threads
@@ -23,25 +21,15 @@ global fdm_is_left
 global ytg_scrim_val
 global ytg_fdm_val
 
-# Triangulation
-global P
-global loc
-global x
-global y
-
 def main():
     def update_values_from_serial():
         """Update values dynamically from the queue."""
         while not q.empty():
             try:
                 global distance
-                global loc
-                global x
-                global y
                 global started
 
                 distance = q.get_nowait()
-                print("EXECUTING JAIODHAIUKSGHDKJWB")
                 distance *= 1.093
 
                 print(f"DISTANCE: {distance}")
@@ -61,22 +49,17 @@ def main():
                     quarter.set("2nd")
 
                 ball_pos.set(yd_line)
-                print(f"THIS IS {ball_pos}")
 
             except Exception as e:
                 print(f"Error updating values: {e}")
 
-        root.after(100, update_values_from_serial) # FIXME change back to 100?
+        root.after(100, update_values_from_serial) 
 
     # ESP32 -> COM5
     # ESP3212 -> COM6
     def read_in_serial(): 
         
         """Read data from the serial port in a background thread."""
-        global P
-        global loc
-        global x
-        global y
         try:
             ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
             ser2 = serial.Serial('COM6', 115200)
@@ -84,79 +67,65 @@ def main():
             ser2.timeout = 5
             print('Serial port opened')
 
-            P=lx.Project(mode='2D',solver='LSE') 
+            def try_parse_float(s: str):
+                # Replace null bytes and strip whitespace
+                s_clean = s.replace('\x00', '').strip()
+                # If empty after cleaning, return None
+                if not s_clean:
+                    return None
+                try:
+                    return float(s_clean)
+                except ValueError:
+                    return None
+
             # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
             a_x = int(0)
             a_y = int(0)
-            b_x = int(5) # b
+            b_x = int(1) # b
             b_y = int(0)
-
-            P.add_anchor('anchor_A',(a_x,a_y))
-            P.add_anchor('anchor_B',(b_x,b_y))
-
-            t,label=P.add_target()
 
             while True:
                 if ser1.in_waiting > 0 and ser2.in_waiting > 0:
                         a = ser1.readline().decode('utf-8').strip() # a
                         c = ser2.readline().decode('utf-8').strip() # c
-                        print(f"THIS IS a: {a}")
-                        print(f"THIS IS c: {c}")
-
-                        # if a and c:
-                            # try:
-                            #     fa = float(a)
-                            #     fc = float(c)
-                            #     print(fa)
-                            #     print(fc)
-                            # except: 
-                            #     print("cant convert a or c to float")
 
                         try:
-                                # if fa != 0.0 and fc != 0.0:
-                                    # global distance
-                                    # distance = float(data)
-                                    # # Convert to yards
-                                    # distance_yd = distance * 1.093
-                                    # distance = distance_yd
-                                    # print(f"DISTANCE IN YARDS: {distance}")
-                                    # q.put(distance)
-                                    # triangulate.updateLoc(a,c)
+                            # First, check if a and c can be properly converted to floats (i.e., they are not composed of purely null terminator characters)
+                            if is_float(a) and is_float(c): 
+                                # Convert to utf-8 for standardization
+                                a_rep = a.encode('utf-8')
+                                c_rep = c.encode('utf-8')
 
-                                    # arccos( (c^2) - (a^2) - (b^2)) / (-2ab)
+                                # Clean up a and c by removing null terminator characters or whitespace
+                                a = try_parse_float(a)
+                                c = try_parse_float(c)
 
-                                    # manually do the math
-                                    # a = float(a)
-                                    # b_x = float(b_x)
-                                    # c = float(c)
-                                    # ang_theta = math.acos( ((c*c) - (a*a) - (b_x*b_x))  / (-2*a*b_x) )
-                                    # print(f"THIS IS ang_theta: {ang_theta}")
+                                # Convert the clean string representations of our coordinates into floats
+                                a = float(a_rep)
+                                c = float(c_rep)
+                                print(f"a: {a}")
+                                print(f"c: {c}")
+                                ang_theta_val = ((c*c) - (a*a) - (b_x*b_x))  / (-2*a*b_x)
 
-                                    # new_dist_x = a * math.cos(ang_theta) * 1.093
-                                    # print(f"THIS IS new_dist: {new_dist_x}")
+                                # Constrain the computed value to be within [-1,1] to avoid math domain errors
+                                ang_theta_val = max(-1, min(1, ang_theta_val)) 
+                                ang_theta = math.acos(ang_theta_val)
+                                print(f"ang_theta: {ang_theta}")
 
-                                t.add_measure('anchor_A',a)
-                                t.add_measure('anchor_B',c)
+                                # Ball x-coordinate
+                                new_dist_x = a * math.cos(ang_theta)
 
-                                P.solve()
-                                loc = t.loc
-                                    # global x
-                                    # global y
-                                    # x = float(loc.x)
-                                    # y = float(loc.y)
-                                    # print(f"loc: {loc}")
-                                    # print(f"x: {x}")
-                                    # print(f"y: {y}")    
+                                # Ball y-coordinate
+                                new_dist_y = a * math.sin(ang_theta)
 
-                                    # q.put(new_dist_x)
-                                q.put(loc.x)
-                                    # break
-                                    # now we should have the values in the queue
+                                print(f"new_dist_x: {new_dist_x}")
+                                print(f"new_dist_y: {new_dist_y}")
+
+                                q.put(new_dist_x)
+                            else:
+                                pass
                         except Exception as e:
-                            print(f"HAPPENING HERE: {e}")
-                        # else:
-                        #     print("skipping b/c a and c are invalid")
-                        #     break
+                            print(e) 
 
         except Exception as e:
             print(f"Error reading serial: {e}")
@@ -191,10 +160,8 @@ def main():
         # Clear old football
         canvas.delete("ball")
 
-        # Place the football on the canvas FIXME change loc.x back to distance
-        global vals
         canvas.create_image((distance + 110) * 4.5, 150, image=tk_ball_img,
-                            anchor=tk.CENTER, tags="ball")
+                            anchor=tk.CENTER, tags="ball") 
         
         # Keep a reference to avoid garbage collection
         canvas.tk_ball_img_ref = tk_ball_img
@@ -324,7 +291,6 @@ def main():
             return
         
         update_scrim(scrim_val)
-        # update_first_down(marker_val)
 
     def set_right_scrim():
         nonlocal endzone_side
@@ -350,7 +316,6 @@ def main():
             return
 
         update_scrim(scrim_val)
-        # update_first_down(marker_val)
 
     def set_left_fdm():
         nonlocal endzone_side
@@ -375,7 +340,6 @@ def main():
             )
             return
 
-        # update_scrim(scrim_val)
         update_first_down(marker_val)
 
     def set_right_fdm():
@@ -401,8 +365,15 @@ def main():
             )
             return
 
-        # update_scrim(scrim_val)
         update_first_down(marker_val)
+
+    """Check if input_string can be converted to a float"""
+    def is_float(input_string):
+        try:
+            float(input_string)
+            return True
+        except ValueError:
+            return False
 
     # ----------------------------------
     # Main GUI setup
@@ -527,3 +498,4 @@ if __name__ == "__main__":
 # START/STOP functionality for each play
 # Display a few of the previous positions of the ball on the interface
 #   Export positions for each play to CSV?
+
