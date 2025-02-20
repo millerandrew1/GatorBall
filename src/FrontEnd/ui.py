@@ -3,7 +3,8 @@ from threading import Thread
 import queue
 import serial
 from PIL import Image, ImageTk
-from tkinter import messagebox  # For pop-up warnings
+from tkinter import messagebox  
+import math
 
 # Create a queue to safely pass data between threads
 q = queue.Queue()
@@ -27,7 +28,12 @@ def main():
             try:
                 global distance
                 global started
+
                 distance = q.get_nowait()
+                distance *= 1.093
+
+                print(f"DISTANCE: {distance}")
+
                 yd_line = f"{distance:.3f} yards"
 
                 # Example updates
@@ -47,29 +53,80 @@ def main():
             except Exception as e:
                 print(f"Error updating values: {e}")
 
-        root.after(100, update_values_from_serial)
+        root.after(100, update_values_from_serial) 
 
-    def read_in_serial(): # NEW COM PORT IS COM5/115200
+    # ESP32 -> COM5
+    # ESP3212 -> COM6
+    def read_in_serial(): 
+        
         """Read data from the serial port in a background thread."""
         try:
-            ser = serial.Serial('COM10', 115200)  # CHANGE COM PORT as needed
-            ser.timeout = 5
+            ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
+            ser2 = serial.Serial('COM6', 115200)
+            ser1.timeout = 5
+            ser2.timeout = 5
             print('Serial port opened')
 
+            def try_parse_float(s: str):
+                # Replace null bytes and strip whitespace
+                s_clean = s.replace('\x00', '').strip()
+                # If empty after cleaning, return None
+                if not s_clean:
+                    return None
+                try:
+                    return float(s_clean)
+                except ValueError:
+                    return None
+
+            # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
+            a_x = int(0)
+            a_y = int(0)
+            b_x = int(1) # b
+            b_y = int(0)
+
             while True:
-                if ser.in_waiting > 0:
-                    data = ser.readline().decode('utf-8').strip()
-                    try:
-                        if float(data):
-                            global distance
-                            distance = float(data)
-                            # Convert to yards
-                            distance_yd = distance * 1.093
-                            distance = distance_yd
-                            print(f"DISTANCE IN YARDS: {distance}")
-                            q.put(distance)
-                    except ValueError:
-                        pass
+                if ser1.in_waiting > 0 and ser2.in_waiting > 0:
+                        a = ser1.readline().decode('utf-8').strip() # a
+                        c = ser2.readline().decode('utf-8').strip() # c
+
+                        try:
+                            # First, check if a and c can be properly converted to floats (i.e., they are not composed of purely null terminator characters)
+                            if is_float(a) and is_float(c): 
+                                # Convert to utf-8 for standardization
+                                a_rep = a.encode('utf-8')
+                                c_rep = c.encode('utf-8')
+
+                                # Clean up a and c by removing null terminator characters or whitespace
+                                a = try_parse_float(a)
+                                c = try_parse_float(c)
+
+                                # Convert the clean string representations of our coordinates into floats
+                                a = float(a_rep)
+                                c = float(c_rep)
+                                print(f"a: {a}")
+                                print(f"c: {c}")
+                                ang_theta_val = ((c*c) - (a*a) - (b_x*b_x))  / (-2*a*b_x)
+
+                                # Constrain the computed value to be within [-1,1] to avoid math domain errors
+                                ang_theta_val = max(-1, min(1, ang_theta_val)) 
+                                ang_theta = math.acos(ang_theta_val)
+                                print(f"ang_theta: {ang_theta}")
+
+                                # Ball x-coordinate
+                                new_dist_x = a * math.cos(ang_theta)
+
+                                # Ball y-coordinate
+                                new_dist_y = a * math.sin(ang_theta)
+
+                                print(f"new_dist_x: {new_dist_x}")
+                                print(f"new_dist_y: {new_dist_y}")
+
+                                q.put(new_dist_x)
+                            else:
+                                pass
+                        except Exception as e:
+                            print(e) 
+
         except Exception as e:
             print(f"Error reading serial: {e}")
 
@@ -103,9 +160,8 @@ def main():
         # Clear old football
         canvas.delete("ball")
 
-        # Place the football on the canvas
         canvas.create_image((distance + 110) * 4.5, 150, image=tk_ball_img,
-                            anchor=tk.CENTER, tags="ball")
+                            anchor=tk.CENTER, tags="ball") 
         
         # Keep a reference to avoid garbage collection
         canvas.tk_ball_img_ref = tk_ball_img
@@ -121,7 +177,6 @@ def main():
         entry_first_down_marker.config(state="normal")
         entry_yards_to_gain.config(state="normal")
         entry_score.config(state="normal")
-        # ball_pos remains disabled
 
     def save_edit():
         entry_possession.config(state="disabled")
@@ -236,7 +291,6 @@ def main():
             return
         
         update_scrim(scrim_val)
-        # update_first_down(marker_val)
 
     def set_right_scrim():
         nonlocal endzone_side
@@ -262,7 +316,6 @@ def main():
             return
 
         update_scrim(scrim_val)
-        # update_first_down(marker_val)
 
     def set_left_fdm():
         nonlocal endzone_side
@@ -287,7 +340,6 @@ def main():
             )
             return
 
-        # update_scrim(scrim_val)
         update_first_down(marker_val)
 
     def set_right_fdm():
@@ -313,8 +365,15 @@ def main():
             )
             return
 
-        # update_scrim(scrim_val)
         update_first_down(marker_val)
+
+    """Check if input_string can be converted to a float"""
+    def is_float(input_string):
+        try:
+            float(input_string)
+            return True
+        except ValueError:
+            return False
 
     # ----------------------------------
     # Main GUI setup
@@ -359,6 +418,7 @@ def main():
     game_clock = tk.StringVar()
     quarter = tk.StringVar()
     ball_pos = tk.StringVar()
+    ball_x_new = tk.StringVar()
 
     # Initial
     possession.set("N/A")
@@ -433,6 +493,8 @@ if __name__ == "__main__":
     main()
 
 # TODO:
-# 1). Automatically update yards to gain (first down - LOS)
 # 2). Sample every 20 points to produce an averaged distance 
 # 3). Save previous position data for the ball and display in some menu
+# START/STOP functionality for each play
+# Display a few of the previous positions of the ball on the interface
+#   Export positions for each play to CSV?
