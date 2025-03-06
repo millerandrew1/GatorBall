@@ -4,7 +4,8 @@ import "./Data.css";
 
 const Data = () => {
   const [distance, setDistance] = useState(0);
-  const [possession, setPossession] = useState("N/A");
+  const [down, setDown] = useState(1);
+  const [possession, setPossession] = useState("Team A");
   const [lineOfScrimmage, setLineOfScrimmage] = useState("N/A");
   const [currentYardLine, setCurrentYardLine] = useState("N/A");
   const [firstDownMarker, setFirstDownMarker] = useState("N/A");
@@ -18,6 +19,7 @@ const Data = () => {
     home: false,
     away: false,
   });
+  const [isFlipped, setIsFlipped] = useState(false);
 
   const homeDropdownRef = useRef(null);
   const awayDropdownRef = useRef(null);
@@ -25,7 +27,7 @@ const Data = () => {
   useEffect(() => {
     // Simulate dynamic updates (replace with actual data fetching)
     const interval = setInterval(() => {
-      const randomYards = Math.random() * 100;
+      const randomYards = Math.floor(Math.random() * 100);
       const currentYards =
         randomYards > 50
           ? 100 - Math.floor(randomYards)
@@ -40,18 +42,21 @@ const Data = () => {
           ? "TOUCHDOWN"
           : `${Math.floor(firstDownYards)}-yard line`;
 
+      const goal =
+        randomYards <= 40 || randomYards >= 50
+          ? Math.abs(firstDownYards - currentYards)
+          : 50 - currentYards + (50 - firstDownYards);
+
+      const goalCheck = outcome == "TOUCHDOWN" ? "Goal" : goal;
+      const finalGoal = down + "st & " + goalCheck;
       setDistance(randomYards);
       setLineOfScrimmage(`${Math.floor(currentYards)}-yard line`);
       setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
       setFirstDownMarker(outcome);
-      setYardsToGain("10 yards");
-      {
-        /*setScore("Home: 14 - Away: 7");*/
-      }
+      setYardsToGain(`${finalGoal}`);
       setPlayClock("25");
       setGameClock("12:35");
       setQuarter("2nd");
-      setPossession("Team A");
     }, 3000);
 
     return () => clearInterval(interval);
@@ -91,6 +96,13 @@ const Data = () => {
     }
   };
 
+  const flip = () => {
+    setIsFlipped((prev) => !prev);
+    setPossession((prev) => (prev === "Team A" ? "Team B" : "Team A"));
+  };
+
+  const incrementDown = () => {};
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -120,28 +132,30 @@ const Data = () => {
           {/* Play Area */}
           <div className="play-area">
             {/* Yard Lines */}
-            {/* Yard Lines */}
-            <div className="yard-lines">
-              {["10", "20", "30", "40", "50", "40", "30", "20", "10"].map(
-                (yard, i) => (
-                  <div key={i} className="yard-line-container">
-                    <div className="yard-line"></div>
-                    <div className="yard-marker">{yard}</div>
-                  </div>
-                )
-              )}
+            <div className="horizontal-yard-lines">
+              {[10, 20, 30, 40, 50, 40, 30, 20, 10].map((yard, index) => (
+                <div key={index} className="horizontal-yard-line">
+                  <span className="yard-number">{yard}</span>
+                </div>
+              ))}
             </div>
 
             {/* First Down Marker */}
             <div
               className="first-down-marker"
-              style={{ left: `${distance + 10}%` }}
+              style={{
+                left: isFlipped
+                  ? `${100 - (distance + 10)}%`
+                  : `${distance + 10}%`,
+              }}
             ></div>
 
             {/* Current Yard Marker */}
             <div
               className="current-yard-marker"
-              style={{ left: `${distance}%` }}
+              style={{
+                left: isFlipped ? `${100 - distance}%` : `${distance}%`,
+              }}
             ></div>
           </div>
 
@@ -151,8 +165,11 @@ const Data = () => {
 
         {/* Game Info */}
         <div className="info-panel">
-          <div className="info-section">
+          <div className="info-section possession-section">
             <strong>Possession:</strong> {possession}
+            <button className="scoreButton flipButton" onClick={flip}>
+              Flip Possession
+            </button>
           </div>
           <div className="info-section">
             <strong>Line of Scrimmage:</strong> {lineOfScrimmage}
@@ -164,7 +181,7 @@ const Data = () => {
             <strong>First Down Marker:</strong> {firstDownMarker}
           </div>
           <div className="info-section">
-            <strong>Yards To Gain:</strong> {yardsToGain}
+            <strong>Down:</strong> {yardsToGain}
           </div>
           <div className="info-section">
             <strong>Score:</strong> Home {score.home} - Away {score.away}
