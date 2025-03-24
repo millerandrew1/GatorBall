@@ -5,6 +5,9 @@ import serial
 from PIL import Image, ImageTk
 from tkinter import messagebox  
 import math
+import time
+import traceback
+import sys
 
 # Create a queue to safely pass data between threads
 q = queue.Queue()
@@ -79,10 +82,18 @@ def main():
                     return None
 
             # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
-            a_x = int(0)
-            a_y = int(0)
-            b_x = int(1) # b
-            b_y = int(0)
+            a_x = 0
+            a_y = 0
+            b_x = 5 # b
+            b_y = 0
+
+            anchor1_buf = []
+            anchor2_buf = []
+
+            # Create lists to compute a moving average of the inputs
+            ROLLING_SIZE = 5
+            rolling_a = []
+            rolling_c = []
 
             while True:
                 if ser1.in_waiting > 0 and ser2.in_waiting > 0:
@@ -93,42 +104,91 @@ def main():
                             # First, check if a and c can be properly converted to floats (i.e., they are not composed of purely null terminator characters)
                             if is_float(a) and is_float(c): 
                                 # Convert to utf-8 for standardization
-                                a_rep = a.encode('utf-8')
-                                c_rep = c.encode('utf-8')
+                                # a = a.encode('utf-8')
+                                # c = c.encode('utf-8')
 
                                 # Clean up a and c by removing null terminator characters or whitespace
                                 a = try_parse_float(a)
                                 c = try_parse_float(c)
 
                                 # Convert the clean string representations of our coordinates into floats
-                                a = float(a_rep)
-                                c = float(c_rep)
+                                # a = float(a_rep)
+                                # c = float(c_rep)
                                 print(f"a: {a}")
                                 print(f"c: {c}")
-                                ang_theta_val = ((c*c) - (a*a) - (b_x*b_x))  / (-2*a*b_x)
 
-                                # Constrain the computed value to be within [-1,1] to avoid math domain errors
-                                ang_theta_val = max(-1, min(1, ang_theta_val)) 
-                                ang_theta = math.acos(ang_theta_val)
-                                print(f"ang_theta: {ang_theta}")
+                                anchor1_buf.append((time.monotonic(), a))
+                                anchor2_buf.append((time.monotonic(), c))
 
-                                # Ball x-coordinate
-                                new_dist_x = a * math.cos(ang_theta)
+                                if anchor1_buf and anchor2_buf:
+                                    # Take most recent value from anchor1 input
+                                    t1, a = anchor1_buf[-1] 
 
-                                # Ball y-coordinate
-                                new_dist_y = a * math.sin(ang_theta)
+                                    # Find the reading from anchor2 that is closest in time to t1
+                                    best_idx = None
+                                    best_t2 = None
+                                    best_dist2 = c
+                                    min_dt = float('inf')
 
-                                print(f"new_dist_x: {new_dist_x}")
-                                print(f"new_dist_y: {new_dist_y}")
+                                    for i, (t2, c) in enumerate(anchor2_buf):
+                                        dt = abs(t2-t1)
+                                        if dt < min_dt:
+                                            min_dt = dt
+                                            best_idx = i
+                                            best_t2 = t2
+                                            best_dist2 = c
 
-                                q.put(new_dist_x)
-                            else:
-                                pass
+                                    print(f"min_dt: {min_dt}")
+                                    print(f"best_t2: {best_t2}")
+                                    print(f"best_dist2: {best_dist2}")
+
+                                    # Remove old values from each buffer to avoid getting repeated measurements
+                                    anchor1_buf.pop()
+                                    anchor2_buf = anchor2_buf[int(best_idx) + 1:] # remove everything up to and including best_idx
+
+                                    c_synced = best_dist2
+
+                                    if best_t2 is not None:
+                                        try:
+                                            rolling_a.append(a)
+                                            rolling_c.append(best_dist2)
+
+                                            # If they exceed ROLLING_SIZE, pop the oldest
+                                            if len(rolling_a) > ROLLING_SIZE:
+                                                rolling_a.pop(0)
+                                            if len(rolling_c) > ROLLING_SIZE:
+                                                rolling_c.pop(0)
+
+                                            a_avg = sum(rolling_a) / len(rolling_a)
+                                            c_avg = sum(rolling_c) / len(rolling_c)
+
+                                            ang_theta_val = ((c_synced*c_synced) - (a*a) - (b_x*b_x))  / (-2*a*b_x)
+                                            ang_theta_val = max(-1, min(1, ang_theta_val)) 
+                                            # Constrain the computed value to be within [-1,1] to avoid math domain errors
+                                            ang_theta = math.acos(ang_theta_val)
+                                            print(f"ang_theta: {ang_theta}")
+
+                                            # Ball x-coordinate
+                                            new_dist_x = a * math.cos(ang_theta)
+
+                                            # Ball y-coordinate
+                                            new_dist_y = a * math.sin(ang_theta)
+
+                                            print(f"new_dist_x: {new_dist_x}")
+                                            print(f"new_dist_y: {new_dist_y}")
+
+                                            q.put(new_dist_x)
+                                        except Exception as e:
+                                            print(f"Error syncing the two inputs: {e}")
                         except Exception as e:
-                            print(e) 
+                            tb = sys.exc_info()[2]
+                            lineno = tb.tb_lineno
+                            print(f"Error: {e} on line {lineno}")
 
         except Exception as e:
-            print(f"Error reading serial: {e}")
+            tb = sys.exc_info()[2]
+            lineno = tb.tb_lineno
+            print(f"Error reading serial: {e} on line {lineno}")
 
     def update_screen():
         global distance
