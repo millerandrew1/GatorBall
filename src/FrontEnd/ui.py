@@ -66,8 +66,8 @@ def main():
         try:
             ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
             ser2 = serial.Serial('COM6', 115200)
-            ser1.timeout = 5
-            ser2.timeout = 5
+            ser1.timeout = 0.2
+            ser2.timeout = 0.2
             print('Serial port opened')
 
             def try_parse_float(s: str):
@@ -84,7 +84,7 @@ def main():
             # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
             a_x = 0
             a_y = 0
-            b_x = 5 # b
+            b_x = 10 # b
             b_y = 0
 
             anchor1_buf = []
@@ -103,23 +103,18 @@ def main():
                         try:
                             # First, check if a and c can be properly converted to floats (i.e., they are not composed of purely null terminator characters)
                             if is_float(a) and is_float(c): 
-                                # Convert to utf-8 for standardization
-                                # a = a.encode('utf-8')
-                                # c = c.encode('utf-8')
-
                                 # Clean up a and c by removing null terminator characters or whitespace
                                 a = try_parse_float(a)
                                 c = try_parse_float(c)
 
                                 # Convert the clean string representations of our coordinates into floats
-                                # a = float(a_rep)
-                                # c = float(c_rep)
                                 print(f"a: {a}")
                                 print(f"c: {c}")
 
                                 anchor1_buf.append((time.monotonic(), a))
                                 anchor2_buf.append((time.monotonic(), c))
 
+                                # Try to sync the values between a and c
                                 if anchor1_buf and anchor2_buf:
                                     # Take most recent value from anchor1 input
                                     t1, a = anchor1_buf[-1] 
@@ -132,6 +127,7 @@ def main():
 
                                     for i, (t2, c) in enumerate(anchor2_buf):
                                         dt = abs(t2-t1)
+                                        print(f"dt: {dt}")
                                         if dt < min_dt:
                                             min_dt = dt
                                             best_idx = i
@@ -139,11 +135,12 @@ def main():
                                             best_dist2 = c
 
                                     print(f"min_dt: {min_dt}")
+                                    print(f"best_idx: {best_idx}")
                                     print(f"best_t2: {best_t2}")
                                     print(f"best_dist2: {best_dist2}")
 
                                     # Remove old values from each buffer to avoid getting repeated measurements
-                                    anchor1_buf.pop()
+                                    anchor1_buf.pop(0)
                                     anchor2_buf = anchor2_buf[int(best_idx) + 1:] # remove everything up to and including best_idx
 
                                     c_synced = best_dist2
@@ -151,7 +148,7 @@ def main():
                                     if best_t2 is not None:
                                         try:
                                             rolling_a.append(a)
-                                            rolling_c.append(best_dist2)
+                                            rolling_c.append(c_synced)
 
                                             # If they exceed ROLLING_SIZE, pop the oldest
                                             if len(rolling_a) > ROLLING_SIZE:
@@ -162,17 +159,17 @@ def main():
                                             a_avg = sum(rolling_a) / len(rolling_a)
                                             c_avg = sum(rolling_c) / len(rolling_c)
 
-                                            ang_theta_val = ((c_synced*c_synced) - (a*a) - (b_x*b_x))  / (-2*a*b_x)
+                                            ang_theta_val = ((c_avg*c_avg) - (a_avg*a_avg) - (b_x*b_x))  / (-2*a_avg*b_x)
                                             ang_theta_val = max(-1, min(1, ang_theta_val)) 
                                             # Constrain the computed value to be within [-1,1] to avoid math domain errors
                                             ang_theta = math.acos(ang_theta_val)
                                             print(f"ang_theta: {ang_theta}")
 
                                             # Ball x-coordinate
-                                            new_dist_x = a * math.cos(ang_theta)
+                                            new_dist_x = a_avg * math.cos(ang_theta)
 
                                             # Ball y-coordinate
-                                            new_dist_y = a * math.sin(ang_theta)
+                                            new_dist_y = a_avg * math.sin(ang_theta)
 
                                             print(f"new_dist_x: {new_dist_x}")
                                             print(f"new_dist_y: {new_dist_y}")
@@ -558,3 +555,9 @@ if __name__ == "__main__":
 # START/STOP functionality for each play
 # Display a few of the previous positions of the ball on the interface
 #   Export positions for each play to CSV?
+
+
+# Features for RC:
+# 1). accuracy/responsiveness
+# 2). vertical translation of ball to detect out of bounds
+# 3). history of ball position
