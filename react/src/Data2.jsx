@@ -4,7 +4,6 @@ import "./Data.css";
 
 const Data = () => {
   const [distance, setDistance] = useState(0);
-  const [firstDownDistance, setFirstDownDistance] = useState(0);
   const [down, setDown] = useState(1);
   const [possession, setPossession] = useState("Team A");
   const [lineOfScrimmage, setLineOfScrimmage] = useState("N/A");
@@ -72,15 +71,14 @@ const Data = () => {
     // Simulate dynamic updates (replace with actual data fetching)
     const interval = setInterval(() => {
       const randomYards = Math.floor(Math.random() * 100);
-      const firstYards = randomYards + 10;
       const currentYards =
         randomYards > 50
           ? 100 - Math.floor(randomYards)
           : Math.floor(randomYards);
       const firstDownYards =
         randomYards + 10 > 50
-          ? 100 - Math.floor(firstYards)
-          : Math.floor(firstYards);
+          ? 100 - Math.floor(randomYards + 10)
+          : Math.floor(randomYards + 10);
 
       const outcome =
         firstDownYards <= 0 || firstDownYards >= 100
@@ -95,7 +93,6 @@ const Data = () => {
       const goalCheck = outcome == "TOUCHDOWN" ? "Goal" : goal;
       const finalGoal = down + "st & " + goalCheck;
       setDistance(randomYards);
-      setFirstDownDistance(firstYards);
       setLineOfScrimmage(`${Math.floor(currentYards)}-yard line`);
       setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
       setFirstDownMarker(outcome);
@@ -157,31 +154,7 @@ const Data = () => {
     }
     if (inputFirstDown) {
       setFirstDownMarker(`${inputFirstDown}-yard line`);
-      setFirstDownDistance(parseInt(inputFirstDown));
     }
-    const currentYards =
-      inputLOS > 50 ? 100 - Math.floor(inputLOS) : Math.floor(inputLOS);
-    const firstDownYards =
-      inputFirstDown > 50
-        ? 100 - Math.floor(inputFirstDown)
-        : Math.floor(inputFirstDown);
-
-    const outcome =
-      inputFirstDown <= 0 || inputFirstDown >= 100
-        ? "TOUCHDOWN"
-        : `${Math.floor(firstDownYards)}-yard line`;
-
-    const goal =
-      inputLOS <= 40 || inputLOS >= 50
-        ? Math.abs(firstDownYards - currentYards)
-        : 50 - currentYards + (50 - firstDownYards);
-
-    const goalCheck = outcome == "TOUCHDOWN" ? "Goal" : goal;
-    const finalGoal = down + "st & " + goalCheck;
-    setLineOfScrimmage(`${Math.floor(currentYards)}-yard line`);
-    setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
-    setFirstDownMarker(outcome);
-    setYardsToGain(`${finalGoal}`);
   };
 
   useEffect(() => {
@@ -226,8 +199,8 @@ const Data = () => {
               className="first-down-marker"
               style={{
                 left: isFlipped
-                  ? `${100 - firstDownDistance}%`
-                  : `${firstDownDistance}%`,
+                  ? `${100 - (distance + 10)}%`
+                  : `${distance + 10}%`,
               }}
             ></div>
 
