@@ -1,360 +1,363 @@
-import { Link } from "react-router-dom";
-import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
 import "./Data.css";
 
-const Data = () => {
-  const [distance, setDistance] = useState(0);
-  const [firstDownDistance, setFirstDownDistance] = useState(0);
+const Data = ({ data }) => {
+  const [CYL, setCYL] = useState(25);
+  const [LOS, setLOS] = useState(25);
+  const [FD, setFD] = useState(35);
+  const [yardsToGain, setYardsToGain] = useState(10);
   const [down, setDown] = useState(1);
+  const [currentYardLine, setCurrentYardLine] = useState("25 yard-line");
+  const [lineOfScrimmage, setLineOfScrimmage] = useState("25 yard-line");
+  const [firstDownMarker, setFirstDownMarker] = useState("35 yard-line");
+  const [downAndYardage, setDownAndYardage] = useState("1st & 10");
   const [possession, setPossession] = useState("Team A");
-  const [lineOfScrimmage, setLineOfScrimmage] = useState("N/A");
-  const [currentYardLine, setCurrentYardLine] = useState("N/A");
-  const [firstDownMarker, setFirstDownMarker] = useState("N/A");
-  const [yardsToGain, setYardsToGain] = useState("N/A");
   const [score, setScore] = useState({ home: 0, away: 0 });
-  const [playClock, setPlayClock] = useState("N/A");
-  const [gameClock, setGameClock] = useState("N/A");
-  const [quarter, setQuarter] = useState("N/A");
-  const [lastScore, setLastScore] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState({
-    home: false,
-    away: false,
-  });
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [quarter, setQuarter] = useState(1);
+  const [clock, setClock] = useState("0:00");
+  const [error, setError] = useState("");
 
-  const homeDropdownRef = useRef(null);
-  const awayDropdownRef = useRef(null);
+  const [applyLOS, setApplyLOS] = useState(0);
+  const [applyFD, setApplyFD] = useState(0);
+  const applyYardage = () => {
+    const los = Number(applyLOS);
+    const fd = Number(applyFD);
+    if (los < 1 || los > 100 || fd < 1 || fd > 100) {
+      setError("Please enter numbers between 1 and 99");
+      return;
+    } else if (fd <= los) {
+      setError("Make sure the first down marker is past the line of scrimmage");
+      return;
+    }
 
-  // New input states for user-defined line of scrimmage and first down
-  const [inputLOS, setInputLOS] = useState("");
-  const [inputFirstDown, setInputFirstDown] = useState("");
-
-  const ws = useRef(null);
-
-  useEffect(() => {
-    ws.current = new WebSocket("ws://localhost:8080"); // Update with actual WebSocket URL
-
-    ws.current.onopen = () => {
-      console.log("WebSocket connected");
-    };
-
-    ws.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "update") {
-        setDistance(data.distance || distance);
-        setDown(data.down || down);
-        setPossession(data.possession || possession);
-        setLineOfScrimmage(data.lineOfScrimmage || lineOfScrimmage);
-        setCurrentYardLine(data.currentYardLine || currentYardLine);
-        setFirstDownMarker(data.firstDownMarker || firstDownMarker);
-        setYardsToGain(data.yardsToGain || yardsToGain);
-        setScore(data.score || score);
-        setPlayClock(data.playClock || playClock);
-        setGameClock(data.gameClock || gameClock);
-        setQuarter(data.quarter || quarter);
-      }
-    };
-
-    ws.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    ws.current.onclose = () => {
-      console.log("WebSocket disconnected");
-    };
-
-    return () => {
-      ws.current.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    // Simulate dynamic updates (replace with actual data fetching)
-    const interval = setInterval(() => {
-      const randomYards = Math.floor(Math.random() * 100);
-      const firstYards = randomYards + 10;
-      const currentYards =
-        randomYards > 50
-          ? 100 - Math.floor(randomYards)
-          : Math.floor(randomYards);
-      const firstDownYards =
-        randomYards + 10 > 50
-          ? 100 - Math.floor(firstYards)
-          : Math.floor(firstYards);
-
-      const outcome =
-        firstDownYards <= 0 || firstDownYards >= 100
-          ? "TOUCHDOWN"
-          : `${Math.floor(firstDownYards)}-yard line`;
-
-      const goal =
-        randomYards <= 40 || randomYards >= 50
-          ? Math.abs(firstDownYards - currentYards)
-          : 50 - currentYards + (50 - firstDownYards);
-
-      const goalCheck = outcome == "TOUCHDOWN" ? "Goal" : goal;
-      const finalGoal = down + "st & " + goalCheck;
-      setDistance(randomYards);
-      setFirstDownDistance(firstYards);
-      setLineOfScrimmage(`${Math.floor(currentYards)}-yard line`);
-      setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
-      setFirstDownMarker(outcome);
-      setYardsToGain(`${finalGoal}`);
-      setPlayClock("25");
-      setGameClock("12:35");
-      setQuarter("2nd");
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const scoringOptions = [
-    { label: "Touchdown (6)", points: 6 },
-    { label: "Extra Point (1)", points: 1 },
-    { label: "Two-Point Conversion (2)", points: 2 },
-    { label: "Field Goal (3)", points: 3 },
-    { label: "Safety (2)", points: 2 },
-  ];
-
-  const toggleDropdown = (team) => {
-    setDropdownOpen((prev) => ({
-      home: team === "home" ? !prev.home : false,
-      away: team === "away" ? !prev.away : false,
-    }));
+    setError("");
+    setLOS(applyLOS);
+    setFD(applyFD);
+    setLineOfScrimmage(`${applyLOS} yard-line`);
+    setFirstDownMarker(`${applyFD} yard-line`);
   };
 
-  const updateScore = (team, points) => {
-    setScore((prev) => {
-      const newScore = { ...prev, [team]: prev[team] + points };
-      setLastScore({ team, points });
-      return newScore;
-    });
-    setDropdownOpen({ home: false, away: false });
-  };
-
-  const undoLastScore = () => {
-    if (lastScore) {
-      setScore((prev) => ({
-        ...prev,
-        [lastScore.team]: prev[lastScore.team] - lastScore.points,
-      }));
-      setLastScore(null);
+  const incrementDown = () => {
+    if (down < 4) {
+      setDown(down + 1);
+    } else {
+      setDown(1);
+      flip();
     }
   };
 
+  const undoDown = () => {
+    if (down == 1) {
+      setDown(4);
+      flip();
+    } else {
+      setDown(down - 1);
+    }
+  };
+
+  const [isFlipped, setIsFlipped] = useState(false);
   const flip = () => {
     setIsFlipped((prev) => !prev);
     setPossession((prev) => (prev === "Team A" ? "Team B" : "Team A"));
   };
 
-  const incrementDown = () => {};
-
-  const applyMarkers = () => {
-    if (inputLOS) {
-      setLineOfScrimmage(`${inputLOS}-yard line`);
-      setCurrentYardLine(`${inputLOS}-yard line`);
-      setDistance(parseInt(inputLOS));
+  const [homeScore, setHomeScore] = useState(0);
+  const [awayScore, setAwayScore] = useState(0);
+  const [lastScore, setLastScore] = useState(null);
+  const applyScore = () => {
+    const home = Number(homeScore);
+    const away = Number(awayScore);
+    setLastScore({ ...score });
+    if (home < 0 || home > 100 || away < 0 || home > 100) {
+      setError("Please enter numbers between 0 and 100");
+      return;
     }
-    if (inputFirstDown) {
-      setFirstDownMarker(`${inputFirstDown}-yard line`);
-      setFirstDownDistance(parseInt(inputFirstDown));
-    }
-    const currentYards =
-      inputLOS > 50 ? 100 - Math.floor(inputLOS) : Math.floor(inputLOS);
-    const firstDownYards =
-      inputFirstDown > 50
-        ? 100 - Math.floor(inputFirstDown)
-        : Math.floor(inputFirstDown);
-
-    const outcome =
-      inputFirstDown <= 0 || inputFirstDown >= 100
-        ? "TOUCHDOWN"
-        : `${Math.floor(firstDownYards)}-yard line`;
-
-    const goal =
-      inputLOS <= 40 || inputLOS >= 50
-        ? Math.abs(firstDownYards - currentYards)
-        : 50 - currentYards + (50 - firstDownYards);
-
-    const goalCheck = outcome == "TOUCHDOWN" ? "Goal" : goal;
-    const finalGoal = down + "st & " + goalCheck;
-    setLineOfScrimmage(`${Math.floor(currentYards)}-yard line`);
-    setCurrentYardLine(`${Math.floor(currentYards)}-yard line`);
-    setFirstDownMarker(outcome);
-    setYardsToGain(`${finalGoal}`);
+    setScore({ home: home, away: away });
+    setHomeScore("");
+    setAwayScore("");
+    setError("");
   };
 
+  const incrementQuarter = () => {
+    if (quarter < 4) {
+      setQuarter(quarter + 1);
+    } else {
+      flip();
+      setPossession("Team B");
+    }
+  };
+
+  const handleScore = (event, team) => {
+    const temp = parseInt(event.target.value, 10);
+    console.log(team);
+    console.log(event);
+    console.log(temp);
+    setLastScore({ ...score });
+    setScore((prevScore) => ({
+      ...prevScore,
+      [team]: prevScore[team] + temp,
+    }));
+    event.target.value = "";
+  };
+
+  const undoLastScore = () => {
+    if (lastScore) {
+      setScore(lastScore);
+      setLastScore(null);
+    }
+  };
+
+  const reset = () => {
+    setLOS(25);
+    setFD(35);
+    setYardsToGain(10);
+    setDown(1);
+    setCurrentYardLine("25 yard-line");
+    setLineOfScrimmage("25 yard-line");
+    setFirstDownMarker("35 yard-line");
+    setDownAndYardage("1st & 10");
+    setPossession("Team A");
+    setScore({ home: 0, away: 0 });
+    setQuarter(1);
+    setClock("0:00");
+    setError("");
+    setApplyLOS(0);
+    setApplyFD(0);
+    setHomeScore(0);
+    setAwayScore(0);
+    setLastScore(null);
+  };
+
+  const [logout, setLogout] = useState(false);
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    setLogout(true);
+  };
+
+  const [position, setPosition] = useState({ x: 0, y: 0, z: 0 });
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        homeDropdownRef.current &&
-        !homeDropdownRef.current.contains(event.target) &&
-        awayDropdownRef.current &&
-        !awayDropdownRef.current.contains(event.target)
-      ) {
-        setDropdownOpen({ home: false, away: false });
-      }
+    const socket = new WebSocket("ws://localhost:8000/ws");
+
+    socket.onopen = () => console.log("WebSocket Connected");
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setPosition(data);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    socket.onclose = () => console.log("WebSocket Disconnected");
+
+    return () => socket.close(); // Cleanup on component unmount
   }, []);
+
+  useEffect(() => {
+    setYardsToGain(FD - LOS);
+    if (down === 1) {
+      setDownAndYardage(`1st & ${yardsToGain}`);
+    } else if (down === 2) {
+      setDownAndYardage(`2nd & ${yardsToGain}`);
+    } else if (down === 3) {
+      setDownAndYardage(`3rd & ${yardsToGain}`);
+    } else if (down === 4) {
+      setDownAndYardage(`4th & ${yardsToGain}`);
+    }
+  });
+
+  useEffect(() => {
+    if (logout) {
+      navigate("/");
+    }
+  }, [logout, navigate]);
 
   return (
     <>
-      <div className="football-container">
-        {/* Football Field */}
-        <div className="field">
-          {/* Left End Zone */}
-          <div className="end-zone left">GATORS</div>
-
-          {/* Play Area */}
-          <div className="play-area">
-            {/* Yard Lines */}
-            <div className="horizontal-yard-lines">
-              {[10, 20, 30, 40, 50, 40, 30, 20, 10].map((yard, index) => (
-                <div key={index} className="horizontal-yard-line">
-                  <span className="yard-number">{yard}</span>
-                </div>
-              ))}
+      <header className="title">
+        <a href="https://www.ufl.edu/" target="_blank">
+          <img src="src/assets/uf.png" className="uf-logo" alt="UF Logo" />
+        </a>
+        <h1>GatorBall</h1>
+        <nav>
+          <button className="logout-button" onClick={handleLogout}>
+            Sign Out
+          </button>
+        </nav>
+      </header>
+      <section className="body">
+        <div className="main">
+          <div className="field">
+            <div className="left-end-zone">ENDZONE</div>
+            <div className="main-field">
+              <div className="yard-lines">
+                {[10, 20, 30, 40, 50, 40, 30, 20, 10].map((yard, index) => (
+                  <div key={index} className="yard-line">
+                    <span className="yard-number">{yard}</span>
+                  </div>
+                ))}
+              </div>
+              <div
+                className="current-yard-line"
+                style={{
+                  left: `${CYL - 0.5}%`,
+                }}
+              ></div>
+              <div
+                className="line-of-scrimmage"
+                style={{
+                  left: isFlipped ? `${100 - LOS}%` : `${LOS}%`,
+                }}
+              ></div>
+              <div
+                className="first-down-marker"
+                style={{
+                  left: isFlipped ? `${100 - FD}%` : `${FD}%`,
+                }}
+              ></div>
             </div>
-
-            {/* First Down Marker */}
-            <div
-              className="first-down-marker"
-              style={{
-                left: isFlipped
-                  ? `${100 - firstDownDistance}%`
-                  : `${firstDownDistance}%`,
-              }}
-            ></div>
-
-            {/* Current Yard Marker */}
-            <div
-              className="current-yard-marker"
-              style={{
-                left: isFlipped ? `${100 - distance}%` : `${distance}%`,
-              }}
-            ></div>
+            <div className="right-end-zone">ENDZONE</div>
           </div>
 
-          {/* Right End Zone */}
-          <div className="end-zone right">GATORS</div>
-        </div>
-
-        {/* Game Info */}
-        <div className="info-panel">
-          {/* Custom Line of Scrimmage and First Down Input */}
-          <div className="info-section">
-            <strong>Set Line of Scrimmage & First Down:</strong>
-            <input
-              type="number"
-              placeholder="Line of Scrimmage (e.g., 30)"
-              value={inputLOS}
-              onChange={(e) => setInputLOS(e.target.value)}
-              className="custom-input"
-            />
-            <input
-              type="number"
-              placeholder="First Down (e.g., 40)"
-              value={inputFirstDown}
-              onChange={(e) => setInputFirstDown(e.target.value)}
-              className="custom-input"
-            />
-            <button onClick={applyMarkers} className="applyButton">
-              Apply
-            </button>
-          </div>
-          <div className="info-section possession-section">
-            <strong>Possession:</strong> {possession}
-            <button className="scoreButton flipButton" onClick={flip}>
-              Flip Possession
-            </button>
-          </div>
-          <div className="info-section">
-            <strong>Line of Scrimmage:</strong> {lineOfScrimmage}
-          </div>
-          <div className="info-section">
-            <strong>Current Yard Line:</strong> {currentYardLine}
-          </div>
-          <div className="info-section">
-            <strong>First Down Marker:</strong> {firstDownMarker}
-          </div>
-          <div className="info-section">
-            <strong>Down:</strong> {yardsToGain}
-          </div>
-          <div className="info-section">
-            <strong>Score:</strong> Home {score.home} - Away {score.away}
-          </div>
-
-          {/*Score Buttons*/}
-          <div className="score-container">
-            {/* Home Score Dropdown */}
-            <div className="dropdown" ref={homeDropdownRef}>
-              <button
-                className="scoreButton"
-                onClick={() => toggleDropdown("home")}
-              >
-                Home Score
+          <div className="info">
+            <div className="info-section set-LOS-and-FD">
+              <strong>Set Line of Scrimmage & First Down: </strong>
+              <input
+                type="number"
+                placeholder="Line of Scrimmage (e.g., 30)"
+                value={applyLOS || ""}
+                onChange={(e) => setApplyLOS(e.target.value)}
+                className="custom-yard-input"
+              />
+              <input
+                type="number"
+                placeholder="First Down (e.g., 30)"
+                value={applyFD || ""}
+                onChange={(e) => setApplyFD(e.target.value)}
+                className="custom-yard-input"
+              />
+              {error && <p>{error}</p>}
+              <button onClick={applyYardage} className="applyYardage">
+                Apply
               </button>
-              {dropdownOpen.home && (
-                <div className="dropdown-content">
-                  {scoringOptions.map((option, index) => (
-                    <button
-                      key={index}
-                      className="scoreOption"
-                      onClick={() => updateScore("home", option.points)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
-
-            {/* Away Score Dropdown */}
-            <div className="dropdown" ref={awayDropdownRef}>
-              <button
-                className="scoreButton"
-                onClick={() => toggleDropdown("away")}
-              >
-                Away Score
+            <div className="info-section">
+              <strong>Current Yard Line: </strong>
+              {currentYardLine}
+            </div>
+            <div className="info-section">
+              <strong>Line of Scrimmage: </strong>
+              {lineOfScrimmage}
+            </div>
+            <div className="info-section">
+              <strong>First Down Marker: </strong>
+              {firstDownMarker}
+            </div>
+            <div className="info-section">
+              <strong>Down:</strong> {downAndYardage}{" "}
+              <button className="down-button" onClick={incrementDown}>
+                Increment Down
               </button>
-              {dropdownOpen.away && (
-                <div className="dropdown-content">
-                  {scoringOptions.map((option, index) => (
-                    <button
-                      key={index}
-                      className="scoreOption"
-                      onClick={() => updateScore("away", option.points)}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button className="down-button" onClick={undoDown}>
+                Undo Down
+              </button>
             </div>
-
-            <button className="undoButton undo" onClick={undoLastScore}>
-              Undo Last Score
-            </button>
-          </div>
-
-          <div className="info-section">
-            <strong>Play Clock:</strong> {playClock}
-          </div>
-          <div className="info-section">
-            <strong>Game Clock:</strong> {gameClock}
-          </div>
-          <div className="info-section">
-            <strong>Quarter:</strong> {quarter}
+            <div className="info-section possession-section">
+              <strong>Possession: </strong>
+              {possession}
+              <button className="flip button" onClick={flip}>
+                Swap Possession
+              </button>
+            </div>
+            <div className="info-section">
+              <strong>Score:</strong> Home {score.home} - Away {score.away}
+            </div>
+            <div className="info-section score-panel">
+              <label className="homeScore">
+                <strong>Home Team:</strong>
+                <select
+                  className="dropdown"
+                  name="score"
+                  defaultValue=""
+                  onChange={(e) => handleScore(e, "home")}
+                >
+                  <option id="score-holder" value="" disabled>
+                    Select Scoring Option
+                  </option>
+                  <option value="6">Touchdown (6)</option>
+                  <option value="1">PAT (1)</option>
+                  <option value="3">FG (3)</option>
+                  <option value="2">Safety (2)</option>
+                  <option value="2">2PT Conversion (2)</option>
+                </select>
+              </label>
+              <label className="awayScore">
+                <strong>Away Team:</strong>
+                <select
+                  className="dropdown"
+                  name="score"
+                  defaultValue=""
+                  onChange={(e) => handleScore(e, "away")}
+                >
+                  <option id="score-holder" value="" disabled>
+                    Select Scoring Option
+                  </option>
+                  <option value="6">Touchdown (6)</option>
+                  <option value="1">PAT (1)</option>
+                  <option value="3">FG (3)</option>
+                  <option value="2">Safety (2)</option>
+                  <option value="2">2PT Conversion (2)</option>
+                </select>
+              </label>
+              <button className="undo-score" onClick={undoLastScore}>
+                Undo Last Score
+              </button>
+            </div>
+            <div className="info-section set-score">
+              <strong>Set Score:</strong>
+              <input
+                type="number"
+                placeholder="Home Team Score"
+                value={homeScore || ""}
+                onChange={(e) => setHomeScore(e.target.value)}
+                className="custom-score-input"
+              />
+              <input
+                type="number"
+                placeholder="Away Team Score"
+                value={awayScore || ""}
+                onChange={(e) => setAwayScore(e.target.value)}
+                className="custom-score-input"
+              />
+              {error && <p>{error}</p>}
+              <button onClick={applyScore} className="applyScore">
+                Apply
+              </button>
+            </div>
+            <div className="info-section">
+              <strong>Quarter: </strong>
+              {quarter}{" "}
+              <button className="quarter-button" onClick={incrementQuarter}>
+                Next Quarter
+              </button>
+            </div>
+            <div className="info-section">
+              <strong>Game Clock: </strong>
+              {clock}
+            </div>
+            <div className="info-section">
+              <button className="reset-button" onClick={reset}>
+                Reset Game
+              </button>
+            </div>
           </div>
         </div>
+      </section>
+      <div>
+        <h1>Real-Time Position</h1>
+        <p>X: {position.x}</p>
+        <p>Y: {position.y}</p>
+        <p>Z: {position.z}</p>
       </div>
-      <h2>FOOTBALL FIELD</h2>
-      <Link to="/">Logout</Link>
     </>
   );
 };

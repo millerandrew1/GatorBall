@@ -1,38 +1,90 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [text, setText] = useState("");
+  const [username, setUsername] = useState("");
+  const [gatorBallID, setGatorBallID] = useState("");
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
+
+  const tempLogin = () => {
+    setLoginSuccess(true);
+  };
+
+  const saveLogin = async (e) => {
+    e.preventDefault();
+    console.log(`Username: ${username} \n Password: ${gatorBallID}`);
+
+    const login = {
+      username,
+      gatorBallID,
+    };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/api/logins",
+        login
+      );
+      console.log("Login saved!", response);
+      setError("");
+      setLoginSuccess(true);
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        console.error("Invalid GatorBall ID.");
+        setError("Invalid GatorBall ID");
+      }
+      console.error("Error saving login: ", error);
+    }
+  };
+
+  useEffect(() => {
+    if (loginSuccess) {
+      navigate("/data");
+    }
+  }, [loginSuccess, navigate]);
 
   return (
     <>
       <header className="header">
-        <a href="https://www.youtube.com/watch?v=xvFZjo5PgG0" target="_blank">
-          <img src="src/assets/uf.png" className="logo" alt="UF Logo" />
+        <a href="https://www.ufl.edu/" target="_blank">
+          <img src="src/assets/uf.png" className="uf-logo" alt="UF Logo" />
         </a>
         <h1>GatorBall</h1>
       </header>
 
-      <div className="code">
-        <h3>Insert GatorBall ID: </h3>
+      <form className="login" onSubmit={tempLogin}>
+        <h2>Create Account: </h2>
         <input
-          type="password"
-          placeholder="Enter text here..."
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+          requiretemp
+          className="login-bar"
+          type="text"
+          placeholder="Create Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
-        <p>You typed (just to check): {text}</p>
-      </div>
+        <input
+          required
+          className="login-bar gatorball-id"
+          type="password"
+          placeholder="Insert Gatorball ID"
+          value={gatorBallID}
+          onChange={(e) => setGatorBallID(e.target.value)}
+        />
+        {error && <p>{error}</p>}
+        <button type="submit" className="login-button">
+          Login
+        </button>
+      </form>
 
-      <nav>
-        <Link to="/data">Login</Link>
-      </nav>
-
-      <p className="read-the-docs">Click on the UF logo to learn more</p>
+      <p className="click-logo">
+        Click on the UF Logo to access organizations home page
+      </p>
     </>
   );
 }

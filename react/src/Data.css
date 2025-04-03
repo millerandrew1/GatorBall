@@ -1,65 +1,94 @@
-/* Container to stack yard lines vertically */
-.horizontal-yard-lines {
-  position: absolute;
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-evenly;
-  align-items: center;
-  pointer-events: none; /* So it doesn't block clicks */
-  z-index: 1;
 }
 
-/* Each vertical faded yard line */
-.horizontal-yard-line {
-  position: relative;
-  width: 2px;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.3); /* Faded white */
-}
-
-/* Optional: Yard numbers inside play area (if desired) */
-.horizontal-yard-line .yard-number {
+.title {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2vw;
-  font-weight: bold;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 144px;
+  display: flex;
+  align-items: center;
+  padding: 2px 20px;
+  background-color: #0021a5;
+  background: linear-gradient(to right, #0021a5, white);
   color: white;
-  pointer-events: none;
-  z-index: 2;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.football-container {
+.uf-logo {
+  height: 6em;
+  padding: 1.5em;
+}
+
+.uf-logo:hover {
+  filter: drop-shadow(0 0 2em #ffffff);
+}
+
+nav {
+  position: absolute;
+  right: 10%;
+}
+
+.logout-button {
+  padding: 8px 16px;
+  background-color: #0021a5;
+  font-size: 20px;
+  text-align: center;
+  opacity: 0.9;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.body {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 136px;
+}
+
+.main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: lightblue;
+  background-color: #0021a5;
+  background: linear-gradient(to bottom, #0021a5, white);
+  border-radius: 4px;
   padding: 20px;
-  height: 90vh;
+  height: 100vh;
+  width: 90vw;
+  min-width: 810px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-/* Football Field */
 .field {
   display: flex;
   position: relative;
-  width: 90vw;
+  width: 100%;
   max-width: 1200px;
-  height: 300px;
-  background-color: green;
-  border: 5px solid white;
+  height: 2000px;
+  background-color: rgb(5, 156, 5);
+  border: 2px solid white;
+  border-radius: 4px;
   overflow: hidden;
 }
 
-/* End Zones */
-.end-zone {
+.left-end-zone,
+.right-end-zone {
   width: 15%;
   height: 100%;
-  background-color: blue;
+  background-color: #0021a5;
   color: orange;
-  font-size: 2vw;
+  font-size: 3vh;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -69,16 +98,15 @@
   position: absolute;
 }
 
-.end-zone.left {
+.left-end-zone {
   left: 0;
 }
 
-.end-zone.right {
+.right-end-zone {
   right: 0;
 }
 
-/* Play Area */
-.play-area {
+.main-field {
   position: absolute;
   left: 15%;
   width: 70%;
@@ -88,49 +116,57 @@
   justify-content: center;
 }
 
-/* Yard Lines */
 .yard-lines {
   position: absolute;
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: row;
   justify-content: space-evenly;
   align-items: center;
-}
-
-.yard-line-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .yard-line {
+  position: relative;
   width: 2px;
   height: 100%;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
-.yard-marker {
+.yard-line .yard-number {
   position: absolute;
-  top: 5%;
-  font-size: 1.5vw;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2vh;
   font-weight: bold;
   color: white;
+  pointer-events: none;
+  z-index: 2;
 }
 
-/* Ball (Moves Dynamically) */
-.ball {
+.current-yard-line {
   position: absolute;
-  bottom: 30%;
-  width: 20px;
-  height: 20px;
-  background-color: black;
+  width: 10px;
+  height: 10px;
+  background-color: red;
   border-radius: 50%;
+  transition: left 0.5s ease-in-out;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.line-of-scrimmage {
+  position: absolute;
+  width: 3px;
+  height: 100%;
+  background-color: blue;
   transition: left 0.5s ease-in-out;
 }
 
-/* First Down Marker */
 .first-down-marker {
   position: absolute;
   width: 3px;
@@ -139,139 +175,46 @@
   transition: left 0.5s ease-in-out;
 }
 
-.current-yard-marker {
-  position: absolute;
-  width: 3px;
-  height: 100%;
-  background-color: red;
-  transition: left 0.5s ease-in-out;
-}
-
-/* Game Info Panel */
-.info-panel {
-  width: 80%;
+.info {
+  width: 90%;
   max-width: 1000px;
-  background: white;
+  background-color: #ffffff;
   padding: 10px;
   margin-top: 20px;
   border-radius: 10px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.info-panel div {
-  margin: 5px 0;
-  font-size: 1.2em;
-}
-
-/*Score Buttons*/
-.score-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  width: 100%;
-  margin: 20px auto;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-content {
-  position: absolute;
-  background-color: white;
-  min-width: 160px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  top: 40px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  visibility: visible;
-  opacity: 1;
-  transition: opacity 0.2s ease-in-out;
-}
-
-.scoreOption {
-  padding: 10px;
-  background: white;
-  border: none;
-  text-align: left;
-  cursor: pointer;
-}
-
-.scoreOption:hover {
-  background: #ddd;
-}
-
-.undo {
-  background-color: rgb(200, 70, 70);
-}
-
-.undo:hover {
-  background-color: rgb(198, 134, 134);
-  border-color: black;
-  border-radius: 14px;
-}
-
-.scoreButton {
-  font-size: 14px; /* Slightly smaller font */
-  padding: 8px 16px; /* Smaller padding */
-  display: flex;
   align-items: center;
-  justify-content: center;
 }
 
-.undoButton {
-  font-size: 14px; /* Slightly smaller font */
-  padding: 8px 16px; /* Smaller padding */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.scoreButton::after {
-  content: "▼"; /* Adds dropdown arrow */
-  font-size: 10px; /* Makes the arrow smaller */
-  margin-left: 5px; /* Spaces it from the text */
-}
-
-/* New class to ensure Possession section and button are aligned horizontally */
-.possession-section {
-  display: flex;
-  align-items: center; /* Align the items vertically in the center */
-  gap: 10px; /* Space between the text and button */
-}
-
-/* Additional styling for the other sections */
-.info-section {
-  margin-bottom: 10px; /* Space between sections */
-}
-
-/* Ensure that the info-panel is centered */
-.info-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center; /* Center all sections horizontally */
-  width: 100%;
-}
-
-/* Keep the info-section class as it is to ensure space between each section */
 .info-section {
   margin-bottom: 10px;
   display: flex;
-  justify-content: center; /* Make sure the sections stay centered */
-}
-
-/* Adjust possession section specifically */
-.possession-section {
-  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 10px;
-  justify-content: center; /* Center the contents of the possession section */
-  width: 100%; /* Ensure it's the same width as other sections */
+}
+
+button {
+  padding: 8px 16px;
+  background-color: #0021a5;
+  text-align: center;
+  opacity: 0.8;
+  cursor: pointer;
+  border-radius: 24px;
+  transition: background-color 0.3s ease;
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+button:hover {
+  opacity: 0.6;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown {
+  margin-left: 12px;
 }
