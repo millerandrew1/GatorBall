@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./Data.css";
 
 const Data = ({ data }) => {
@@ -136,15 +136,40 @@ const Data = ({ data }) => {
     setLogout(true);
   };
 
-  const [position, setPosition] = useState({ x: 0, y: 0, z: 0 });
+  const [position, setPosition] = useState({ time: 0, yardX: 0, yardY: 0 });
+  const [gameStates, setGameStates] = useState([]);
+
+  const saveState = useCallback(() => {
+    if (gameStates.length === 0) return; // No data to send
+
+    console.log("Saving game states batch...");
+
+    axios
+      .post("http://localhost:3002/api/game-states", { gameStates })
+      .then((response) => {
+        console.log("Game states saved!", response);
+        setGameStates([]); // Clear the local array after successful save
+      })
+      .catch((error) => console.error("Error saving game state", error));
+  }, [gameStates]);
+
+  useEffect(() => {
+    const interval = setInterval(saveState, 5000);
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [saveState]);
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8000/ws");
 
     socket.onopen = () => console.log("WebSocket Connected");
+
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setPosition(data);
+
+      setPosition((prev) => ({ ...prev, ...data }));
+
+      // Add new position data to an array (state)
+      setGameStates((prevStates) => [...prevStates, data]);
     };
 
     socket.onclose = () => console.log("WebSocket Disconnected");
@@ -354,9 +379,9 @@ const Data = ({ data }) => {
       </section>
       <div>
         <h1>Real-Time Position</h1>
-        <p>X: {position.x}</p>
-        <p>Y: {position.y}</p>
-        <p>Z: {position.z}</p>
+        <p>X: {position.time}</p>
+        <p>Y: {position.yardX}</p>
+        <p>Z: {position.yardY}</p>
       </div>
     </>
   );

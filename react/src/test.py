@@ -13,7 +13,7 @@ async def websocket_endpoint(websocket: WebSocket):
     x, y, z = 0, 0, 0
 
     while count < 50:
-        data = {"x": x, "y": y, "z": z}  # Send structured JSON data
+        data = {"time": x, "yardX": y, "yardY": z}  # Send structured JSON data
         await websocket.send_json(data)  # Send to WebSocket client
 
         x += 1
@@ -21,7 +21,7 @@ async def websocket_endpoint(websocket: WebSocket):
         z += 1
         count += 1
         
-        await asyncio.sleep(0.1)  # Adjust as needed for real-time updates
+        await asyncio.sleep(1)  # Adjust as needed for real-time updates
 
     await websocket.close() 
 
