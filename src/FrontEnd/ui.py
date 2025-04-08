@@ -45,9 +45,6 @@ def main():
                 global current_ball_x
                 global current_ball_y
 
-                # distance = q.get_nowait()
-                # distance *= 1.093
-
                 ball_x, ball_y = q.get_nowait()
 
                 ball_x *= 1.093
@@ -64,8 +61,6 @@ def main():
                 position_history.append((current_ball_x, current_ball_y, current_time))
                 if len(position_history) > 50:
                     position_history.pop(0)
-
-                # print(f"DISTANCE: {distance}")
 
                 yd_line = f"{ball_x:.3f} yards"
 
@@ -121,7 +116,7 @@ def main():
             anchor2_buf = []
 
             # Create lists to compute a moving average of the inputs
-            ROLLING_SIZE = 2
+            ROLLING_SIZE = 1
             rolling_a = []
             rolling_c = []
 
@@ -191,7 +186,6 @@ def main():
 
                         # Cleanup used data
                         pop1 = anchor1_buf.pop()  # last one used
-                        # pop1 = anchor1_buf.clear()
                         pop2 = anchor2_buf = anchor2_buf[best_idx + 1:]  # drop old ones
                         print(f"POPPED {pop1} AND {pop2}")
         except Exception as e:
