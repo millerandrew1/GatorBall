@@ -7,7 +7,7 @@ const Data = ({ data }) => {
   const [CYL, setCYL] = useState(25);
   const [LOS, setLOS] = useState(25);
   const [FD, setFD] = useState(35);
-  const [yardsToGain, setYardsToGain] = useState(10);
+  const [yardsToGain, setYardsToGain] = useState("");
   const [down, setDown] = useState(1);
   const [currentYardLine, setCurrentYardLine] = useState("25 yard-line");
   const [lineOfScrimmage, setLineOfScrimmage] = useState("25 yard-line");
@@ -17,26 +17,35 @@ const Data = ({ data }) => {
   const [score, setScore] = useState({ home: 0, away: 0 });
   const [quarter, setQuarter] = useState(1);
   const [clock, setClock] = useState("0:00");
-  const [error, setError] = useState("");
+  const [yardError, setYardError] = useState("");
+  const [scoreError, setScoreError] = useState("");
 
   const [applyLOS, setApplyLOS] = useState(0);
   const [applyFD, setApplyFD] = useState(0);
+
   const applyYardage = () => {
     const los = Number(applyLOS);
     const fd = Number(applyFD);
     if (los < 1 || los > 100 || fd < 1 || fd > 100) {
-      setError("Please enter numbers between 1 and 99");
+      setYardError("Please enter numbers between 1 and 99");
       return;
     } else if (fd <= los) {
-      setError("Make sure the first down marker is past the line of scrimmage");
+      setYardError(
+        "Make sure the first down marker is past the line of scrimmage"
+      );
+      return;
+    } else if (CYL >= fd) {
+      setYardError(
+        "Make sure the first down marker is past the current yard-line"
+      );
       return;
     }
 
-    setError("");
+    setYardError("");
     setLOS(applyLOS);
     setFD(applyFD);
-    setLineOfScrimmage(`${applyLOS} yard-line`);
-    setFirstDownMarker(`${applyFD} yard-line`);
+    setLineOfScrimmage(`${LOS} yard-line`);
+    setFirstDownMarker(`${FD} yard-line`);
   };
 
   const incrementDown = () => {
@@ -44,14 +53,12 @@ const Data = ({ data }) => {
       setDown(down + 1);
     } else {
       setDown(1);
-      flip();
     }
   };
 
   const undoDown = () => {
     if (down == 1) {
       setDown(4);
-      flip();
     } else {
       setDown(down - 1);
     }
@@ -71,13 +78,21 @@ const Data = ({ data }) => {
     const away = Number(awayScore);
     setLastScore({ ...score });
     if (home < 0 || home > 100 || away < 0 || home > 100) {
-      setError("Please enter numbers between 0 and 100");
+      setScoreError("Please enter numbers between 0 and 100");
       return;
     }
     setScore({ home: home, away: away });
     setHomeScore("");
     setAwayScore("");
-    setError("");
+    setScoreError("");
+  };
+
+  const clearScore = () => {
+    setLastScore({ ...score });
+    setScore({ home: 0, away: 0 });
+    setHomeScore("");
+    setAwayScore("");
+    setScoreError("");
   };
 
   const incrementQuarter = () => {
@@ -122,7 +137,8 @@ const Data = ({ data }) => {
     setScore({ home: 0, away: 0 });
     setQuarter(1);
     setClock("0:00");
-    setError("");
+    setYardError("");
+    setScoreError("");
     setApplyLOS(0);
     setApplyFD(0);
     setHomeScore(0);
@@ -165,20 +181,77 @@ const Data = ({ data }) => {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-
-      setPosition((prev) => ({ ...prev, ...data }));
+      console.log(data);
+      setClock(data.time);
+      setCYL(data.yardX);
+      {
+        /* setFD(data.yardY); */
+      }
+      const updatedData = { time: clock, yardX: CYL, yardY: 0 };
+      console.log(updatedData);
+      {
+        /*setPosition((prev) => ({ ...prev, ...updatedData }));*/
+      }
+      setPosition(data);
 
       // Add new position data to an array (state)
-      setGameStates((prevStates) => [...prevStates, data]);
+      setGameStates((prevStates) => [...prevStates, updatedData]);
     };
 
     socket.onclose = () => console.log("WebSocket Disconnected");
-
     return () => socket.close(); // Cleanup on component unmount
   }, []);
 
   useEffect(() => {
+    if (LOS <= 50) {
+      setLineOfScrimmage(`${LOS} yard-line`);
+    } else {
+      setLineOfScrimmage(`${50 - (LOS - 50)} yard-line`);
+    }
+    if (FD <= 50) {
+      setFirstDownMarker(`${FD} yard-line`);
+    } else {
+      setFirstDownMarker(`${50 - (FD - 50)} yard-line`);
+    }
+    if (CYL <= 50) {
+      setCurrentYardLine(`${CYL} yard-line`);
+    } else {
+      setCurrentYardLine(`${50 - (CYL - 50)} yard-line`);
+    }
+    {
+      /*else if (CYL >= 100) {
+      setFirstDownMarker(`TOUCHDOWN`);
+      if (possession == "Team A") {
+        setScore((prevScore) => ({
+          ...prevScore,
+          ["home"]: prevScore["home"] + 6,
+        }));
+      } else {
+        setScore((prevScore) => ({
+          ...prevScore,
+          ["away"]: prevScore["away"] + 6,
+        }));
+      }
+      setCYL(25);
+      setFD(null);
+      setLOS(25);
+    } */
+    }
+  });
+
+  useEffect(() => {
+    if (CYL >= FD) {
+      setLOS(CYL);
+      setFD(LOS + 10);
+      setDown(1);
+    }
+  });
+
+  useEffect(() => {
     setYardsToGain(FD - LOS);
+    if (FD <= 0 || FD >= 100) {
+      setYardsToGain("GOAL");
+    }
     if (down === 1) {
       setDownAndYardage(`1st & ${yardsToGain}`);
     } else if (down === 2) {
@@ -260,7 +333,7 @@ const Data = ({ data }) => {
                 onChange={(e) => setApplyFD(e.target.value)}
                 className="custom-yard-input"
               />
-              {error && <p>{error}</p>}
+              {yardError && <p>{yardError}</p>}
               <button onClick={applyYardage} className="applyYardage">
                 Apply
               </button>
@@ -279,11 +352,11 @@ const Data = ({ data }) => {
             </div>
             <div className="info-section">
               <strong>Down:</strong> {downAndYardage}{" "}
-              <button className="down-button" onClick={incrementDown}>
-                Increment Down
-              </button>
               <button className="down-button" onClick={undoDown}>
                 Undo Down
+              </button>
+              <button className="down-button" onClick={incrementDown}>
+                Increment Down
               </button>
             </div>
             <div className="info-section possession-section">
@@ -334,7 +407,7 @@ const Data = ({ data }) => {
                 </select>
               </label>
               <button className="undo-score" onClick={undoLastScore}>
-                Undo Last Score
+                Undo Last Score Change
               </button>
             </div>
             <div className="info-section set-score">
@@ -353,9 +426,12 @@ const Data = ({ data }) => {
                 onChange={(e) => setAwayScore(e.target.value)}
                 className="custom-score-input"
               />
-              {error && <p>{error}</p>}
+              {scoreError && <p>{scoreError}</p>}
               <button onClick={applyScore} className="applyScore">
                 Apply
+              </button>
+              <button onClick={clearScore} className="clearScore">
+                Clear Score
               </button>
             </div>
             <div className="info-section">

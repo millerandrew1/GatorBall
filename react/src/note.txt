@@ -1,0 +1,7 @@
+# WebSocket Imports
+    @app.websocket("/ws")
+    async def websocket_endpoint(websocket: WebSocket)
+        await websocket.accept()
+        data = {"time": curren_time, "yardX": current_ball_x, "yardY": current_ball_y}
+        await websocket.send_json(data)
+        await asyncio.sleep(1)
