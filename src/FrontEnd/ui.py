@@ -8,6 +8,9 @@ import math
 import time
 import traceback
 import sys
+import csv
+import time
+from datetime import datetime
 
 # Create a queue to safely pass data between threads
 q = queue.Queue()
@@ -24,6 +27,14 @@ global fdm_is_left
 global ytg_scrim_val
 global ytg_fdm_val
 
+global current_ball_x
+global current_ball_y
+current_ball_x = 0
+current_ball_y = 0
+
+global position_history
+position_history = []
+
 def main():
     def update_values_from_serial():
         """Update values dynamically from the queue."""
@@ -31,13 +42,27 @@ def main():
             try:
                 global distance
                 global started
+                global current_ball_x
+                global current_ball_y
 
-                distance = q.get_nowait()
-                distance *= 1.093
+                ball_x, ball_y = q.get_nowait()
 
-                print(f"DISTANCE: {distance}")
+                ball_x *= 1.093
+                ball_y *= 1.093
 
-                yd_line = f"{distance:.3f} yards"
+                print(f"DISPLAY X={ball_x}, DISPLAY Y={ball_y}")
+
+                current_ball_x = ball_x
+                current_ball_y = ball_y
+                now = datetime.now()
+                current_time = time.strftime("%H:%M:%S") + f".{now.microsecond // 1000:03d}"
+                print(f"current_time: {current_time}")
+
+                position_history.append((current_ball_x, current_ball_y, current_time))
+                if len(position_history) > 50:
+                    position_history.pop(0)
+
+                yd_line = f"{ball_x:.3f} yards"
 
                 # Example updates
                 if not started:
@@ -66,8 +91,8 @@ def main():
         try:
             ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
             ser2 = serial.Serial('COM6', 115200)
-            ser1.timeout = 0.2
-            ser2.timeout = 0.2
+            ser1.timeout = 3
+            ser2.timeout = 3
             print('Serial port opened')
 
             def try_parse_float(s: str):
@@ -84,111 +109,94 @@ def main():
             # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
             a_x = 0
             a_y = 0
-            b_x = 10 # b
+            b_x = 8 # b
             b_y = 0
 
             anchor1_buf = []
             anchor2_buf = []
 
             # Create lists to compute a moving average of the inputs
-            ROLLING_SIZE = 5
+            ROLLING_SIZE = 1
             rolling_a = []
             rolling_c = []
 
             while True:
-                if ser1.in_waiting > 0 and ser2.in_waiting > 0:
-                        a = ser1.readline().decode('utf-8').strip() # a
-                        c = ser2.readline().decode('utf-8').strip() # c
+                now = time.monotonic()
 
+                # Read from anchor 1 (ser1) if data available
+                if ser1.in_waiting > 0:
+                    raw_a = ser1.readline().decode('utf-8').strip()
+                    a = try_parse_float(raw_a)
+                    if a is not None:
+                        anchor1_buf.append((now, a))  
+                        print(f"A: {a:.3f} at {now:.3f}")
+
+                # Read from anchor 1 (ser2) if data available
+                if ser2.in_waiting > 0:
+                    raw_c = ser2.readline().decode('utf-8').strip()
+                    c = try_parse_float(raw_c)
+                    if c is not None:
+                        anchor2_buf.append((now, c))  
+                        print(f"C: {c:.3f} at {now:.3f}")
+
+                # Try to sync the most recent value of anchor1 with the most relevant anchor 2 value
+                if anchor1_buf and anchor2_buf:
+                    t1, a_val = anchor1_buf[-1]
+
+                    best_idx = None
+                    best_dt = float('inf')
+                    best_c = None
+
+                    for i, (t2, c_val) in enumerate(anchor2_buf):
+                        dt = abs(t2 - t1)
+                        if dt < best_dt:
+                            best_dt = dt
+                            best_idx = i
+                            best_c = c_val
+
+                    if best_idx is not None and best_dt < 0.2:  # max 200ms mismatch allowed
+                        print(f"SYNCED: a={a_val}, c={best_c}, dt={best_dt:.3f}")
+
+                        # Smooth the values (moving average)
+                        rolling_a.append(a_val)
+                        rolling_c.append(best_c)
+                        if len(rolling_a) > ROLLING_SIZE:
+                            rolling_a.pop(0)
+                        if len(rolling_c) > ROLLING_SIZE:
+                            rolling_c.pop(0)
+
+                        a_avg = sum(rolling_a) / len(rolling_a)
+                        c_avg = sum(rolling_c) / len(rolling_c)
+
+                        # Compute the angle
                         try:
-                            # First, check if a and c can be properly converted to floats (i.e., they are not composed of purely null terminator characters)
-                            if is_float(a) and is_float(c): 
-                                # Clean up a and c by removing null terminator characters or whitespace
-                                a = try_parse_float(a)
-                                c = try_parse_float(c)
+                            numerator = a_avg*a_avg + b_x*b_x - c_avg*c_avg
+                            denominator = 2 * a_avg * b_x
+                            ang_theta_val = numerator / denominator
+                            ang_theta_val = max(-1, min(1, ang_theta_val))  # clamp
 
-                                # Convert the clean string representations of our coordinates into floats
-                                print(f"a: {a}")
-                                print(f"c: {c}")
+                            ang_theta = math.acos(ang_theta_val)
+                            new_dist_x = a_avg * math.cos(ang_theta)
+                            new_dist_y = a_avg * math.sin(ang_theta)
 
-                                anchor1_buf.append((time.monotonic(), a))
-                                anchor2_buf.append((time.monotonic(), c))
-
-                                # Try to sync the values between a and c
-                                if anchor1_buf and anchor2_buf:
-                                    # Take most recent value from anchor1 input
-                                    t1, a = anchor1_buf[-1] 
-
-                                    # Find the reading from anchor2 that is closest in time to t1
-                                    best_idx = None
-                                    best_t2 = None
-                                    best_dist2 = c
-                                    min_dt = float('inf')
-
-                                    for i, (t2, c) in enumerate(anchor2_buf):
-                                        dt = abs(t2-t1)
-                                        print(f"dt: {dt}")
-                                        if dt < min_dt:
-                                            min_dt = dt
-                                            best_idx = i
-                                            best_t2 = t2
-                                            best_dist2 = c
-
-                                    print(f"min_dt: {min_dt}")
-                                    print(f"best_idx: {best_idx}")
-                                    print(f"best_t2: {best_t2}")
-                                    print(f"best_dist2: {best_dist2}")
-
-                                    # Remove old values from each buffer to avoid getting repeated measurements
-                                    anchor1_buf.pop(0)
-                                    anchor2_buf = anchor2_buf[int(best_idx) + 1:] # remove everything up to and including best_idx
-
-                                    c_synced = best_dist2
-
-                                    if best_t2 is not None:
-                                        try:
-                                            rolling_a.append(a)
-                                            rolling_c.append(c_synced)
-
-                                            # If they exceed ROLLING_SIZE, pop the oldest
-                                            if len(rolling_a) > ROLLING_SIZE:
-                                                rolling_a.pop(0)
-                                            if len(rolling_c) > ROLLING_SIZE:
-                                                rolling_c.pop(0)
-
-                                            a_avg = sum(rolling_a) / len(rolling_a)
-                                            c_avg = sum(rolling_c) / len(rolling_c)
-
-                                            ang_theta_val = ((c_avg*c_avg) - (a_avg*a_avg) - (b_x*b_x))  / (-2*a_avg*b_x)
-                                            ang_theta_val = max(-1, min(1, ang_theta_val)) 
-                                            # Constrain the computed value to be within [-1,1] to avoid math domain errors
-                                            ang_theta = math.acos(ang_theta_val)
-                                            print(f"ang_theta: {ang_theta}")
-
-                                            # Ball x-coordinate
-                                            new_dist_x = a_avg * math.cos(ang_theta)
-
-                                            # Ball y-coordinate
-                                            new_dist_y = a_avg * math.sin(ang_theta)
-
-                                            print(f"new_dist_x: {new_dist_x}")
-                                            print(f"new_dist_y: {new_dist_y}")
-
-                                            q.put(new_dist_x)
-                                        except Exception as e:
-                                            print(f"Error syncing the two inputs: {e}")
+                            print(f"CALCULATED X={new_dist_x:.3f}, CALCULATED Y={new_dist_y:.3f}")
+                            q.put((new_dist_x, new_dist_y))
                         except Exception as e:
-                            tb = sys.exc_info()[2]
-                            lineno = tb.tb_lineno
-                            print(f"Error: {e} on line {lineno}")
+                            print(f"Math error: {e}")
 
+                        # Cleanup used data
+                        pop1 = anchor1_buf.pop()  # last one used
+                        pop2 = anchor2_buf = anchor2_buf[best_idx + 1:]  # drop old ones
+                        print(f"POPPED {pop1} AND {pop2}")
         except Exception as e:
             tb = sys.exc_info()[2]
             lineno = tb.tb_lineno
             print(f"Error reading serial: {e} on line {lineno}")
 
     def update_screen():
-        global distance
+        # global distance
+        global current_ball_x
+        global current_ball_y
         
         # ----------------------------------------------------------
         # 1) Load and resize the football image, convert to RGBA
@@ -212,12 +220,16 @@ def main():
         ball_img.putdata(new_data)
 
         # Convert to PhotoImage for tkinter
+
         tk_ball_img = ImageTk.PhotoImage(ball_img)
 
         # Clear old football
         canvas.delete("ball")
 
-        canvas.create_image((distance + 110) * 4.5, 150, image=tk_ball_img,
+        x_coord = (current_ball_x + 110) * 4.5
+        y_coord = 150 - (current_ball_y * 4.5) #FIXME
+
+        canvas.create_image(x_coord, y_coord, image=tk_ball_img,
                             anchor=tk.CENTER, tags="ball") 
         
         # Keep a reference to avoid garbage collection
@@ -431,6 +443,21 @@ def main():
             return True
         except ValueError:
             return False
+        
+    def export_history():
+        global position_history
+        filename = "position_log.csv"
+        try:
+            with open(filename, "w", newline="") as f:
+                writer = csv.writer(f)
+                # Write a header row
+                writer.writerow(["Timestamp", "X (yards)", "Y (yards)"])
+                # Write each position
+                for (px, py, tstamp) in position_history:
+                    writer.writerow([tstamp, f"{px:.3f}", f"{py:.3f}"])
+            messagebox.showinfo("Export complete", f"History exported to {filename}")
+        except Exception as e:
+            messagebox.showerror("Export error", f"Could not export CSV: {e}")
 
     # ----------------------------------
     # Main GUI setup
@@ -538,6 +565,9 @@ def main():
     right_button_fdm = tk.Button(root, text="Right", command=set_right_fdm, font=("Helvetica", 14))
     right_button_fdm.place(x=710, y=440)
 
+    export_button = tk.Button(root, text="Export History", command=export_history, font=("Helvetica", 14))
+    export_button.place(x=180, y=500)
+
     # Serial reading thread
     serial_thread = Thread(target=read_in_serial, daemon=True)
     serial_thread.start()
@@ -558,6 +588,6 @@ if __name__ == "__main__":
 
 
 # Features for RC:
-# 1). accuracy/responsiveness
-# 2). vertical translation of ball to detect out of bounds
-# 3). history of ball position
+# 1). accuracy/responsiveness (DONE)
+# 2). vertical translation of ball to detect out of bounds (IP)
+# 3). history of ball position (IP)
