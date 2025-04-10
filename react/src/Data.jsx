@@ -155,7 +155,8 @@ const Data = ({ data }) => {
   const [position, setPosition] = useState({ time: 0, yardX: 0, yardY: 0 });
   const [gameStates, setGameStates] = useState([]);
 
-  const saveState = useCallback(() => {
+  {
+    /* const saveState = useCallback(() => {
     if (gameStates.length === 0) return; // No data to send
 
     console.log("Saving game states batch...");
@@ -172,7 +173,8 @@ const Data = ({ data }) => {
   useEffect(() => {
     const interval = setInterval(saveState, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [saveState]);
+  }, [saveState]); */
+  }
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8000/ws");
@@ -188,14 +190,14 @@ const Data = ({ data }) => {
         /* setFD(data.yardY); */
       }
       const updatedData = { time: clock, yardX: CYL, yardY: 0 };
-      console.log(updatedData);
+      console.log("Updated Data: " + updatedData);
       {
         /*setPosition((prev) => ({ ...prev, ...updatedData }));*/
       }
       setPosition(data);
 
       // Add new position data to an array (state)
-      setGameStates((prevStates) => [...prevStates, updatedData]);
+      setGameStates((prevStates) => [...prevStates, data]);
     };
 
     socket.onclose = () => console.log("WebSocket Disconnected");
