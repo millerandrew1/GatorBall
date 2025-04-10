@@ -226,7 +226,8 @@ def main():
         # Clear old football
         canvas.delete("ball")
 
-        x_coord = (current_ball_x + 110) * 4.5
+        # x_coord = (current_ball_x + 110) * 4.5
+        x_coord = (current_ball_x + 50) * 10
         y_coord = 150 - (current_ball_y * 4.5) #FIXME
 
         canvas.create_image(x_coord, y_coord, image=tk_ball_img,
