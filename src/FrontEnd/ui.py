@@ -109,8 +109,8 @@ def main():
             # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
             a_x = 0
             a_y = 0
-            b_x = 8 # b
-            b_y = 0
+            b_x = 0 
+            b_y = 10 # ANCHOR B POSITION
 
             anchor1_buf = []
             anchor2_buf = []
@@ -170,14 +170,16 @@ def main():
 
                         # Compute the angle
                         try:
-                            numerator = a_avg*a_avg + b_x*b_x - c_avg*c_avg
-                            denominator = 2 * a_avg * b_x
+                            numerator = a_avg*a_avg + b_y*b_y - c_avg*c_avg
+                            denominator = 2 * a_avg * b_y
                             ang_theta_val = numerator / denominator
                             ang_theta_val = max(-1, min(1, ang_theta_val))  # clamp
 
                             ang_theta = math.acos(ang_theta_val)
-                            new_dist_x = a_avg * math.cos(ang_theta)
-                            new_dist_y = a_avg * math.sin(ang_theta)
+                            print(f"ANG_THETA: {ang_theta}")
+                            # SWAPPED X AND Y FOR NEW ANCHOR ORIENTATION: FIXME
+                            new_dist_y = a_avg * math.cos(ang_theta)
+                            new_dist_x = a_avg * math.sin(ang_theta)
 
                             print(f"CALCULATED X={new_dist_x:.3f}, CALCULATED Y={new_dist_y:.3f}")
                             q.put((new_dist_x, new_dist_y))
@@ -226,8 +228,8 @@ def main():
         # Clear old football
         canvas.delete("ball")
 
-        # x_coord = (current_ball_x + 110) * 4.5
-        x_coord = (current_ball_x + 50) * 10
+        x_coord = (current_ball_x + 110) * 4.5
+        # x_coord = (current_ball_x + 50) * 10
         y_coord = 150 - (current_ball_y * 4.5) #FIXME
 
         canvas.create_image(x_coord, y_coord, image=tk_ball_img,
