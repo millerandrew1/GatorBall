@@ -34,7 +34,7 @@ const Data = ({ data }) => {
         "Make sure the first down marker is past the line of scrimmage"
       );
       return;
-    } else if (CYL >= fd) {
+    } else if (Math.round(CYL) >= fd) {
       setYardError(
         "Make sure the first down marker is past the current yard-line"
       );
@@ -48,19 +48,38 @@ const Data = ({ data }) => {
     setFirstDownMarker(`${FD} yard-line`);
   };
 
+  const [downState, setDownState] = useState({
+    down: down,
+    LOS: LOS,
+    FD: FD,
+  });
+  const [possessionState, setPossessionState] = useState("Team A");
+  const [gameStarted, setGameStarted] = useState(false);
+
   const incrementDown = () => {
-    if (down < 4) {
-      setDown(down + 1);
+    setGameStarted(true);
+    setDownState({ down, LOS, FD });
+    console.log(downState);
+    if (Math.round(CYL) >= FD) {
+      setDown(1);
+      setLOS(Math.round(CYL));
+      setFD(Math.round(CYL) + 10);
+    } else if (down < 4) {
+      setDown((prevDown) => prevDown + 1);
+      setLOS(Math.round(CYL));
     } else {
       setDown(1);
+      flip();
+      setPossessionState((prev) => (prev === "Team A" ? "Team B" : "Team A"));
     }
   };
 
   const undoDown = () => {
-    if (down == 1) {
-      setDown(4);
-    } else {
-      setDown(down - 1);
+    if (gameStarted == true) {
+      setDown(downState.down);
+      setLOS(downState.LOS);
+      setFD(downState.FD);
+      setPossession(possessionState);
     }
   };
 
@@ -155,7 +174,8 @@ const Data = ({ data }) => {
   const [position, setPosition] = useState({ time: 0, yardX: 0, yardY: 0 });
   const [gameStates, setGameStates] = useState([]);
 
-  const saveState = useCallback(() => {
+  {
+    /* const saveState = useCallback(() => {
     if (gameStates.length === 0) return; // No data to send
 
     console.log("Saving game states batch...");
@@ -172,7 +192,8 @@ const Data = ({ data }) => {
   useEffect(() => {
     const interval = setInterval(saveState, 5000);
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [saveState]);
+  }, [saveState]); */
+  }
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8000/ws");
@@ -181,21 +202,23 @@ const Data = ({ data }) => {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
+      {
+        /*console.log(data);*/
+      }
       setClock(data.time);
-      setCYL(data.yardX);
+      setCYL(Math.round(data.yardX));
       {
         /* setFD(data.yardY); */
       }
       const updatedData = { time: clock, yardX: CYL, yardY: 0 };
-      console.log(updatedData);
+      console.log("Updated Data: " + updatedData);
       {
         /*setPosition((prev) => ({ ...prev, ...updatedData }));*/
       }
       setPosition(data);
 
       // Add new position data to an array (state)
-      setGameStates((prevStates) => [...prevStates, updatedData]);
+      setGameStates((prevStates) => [...prevStates, data]);
     };
 
     socket.onclose = () => console.log("WebSocket Disconnected");
@@ -210,11 +233,15 @@ const Data = ({ data }) => {
     }
     if (FD <= 50) {
       setFirstDownMarker(`${FD} yard-line`);
+    } else if (FD >= 100) {
+      setFirstDownMarker("Touchdown");
     } else {
       setFirstDownMarker(`${50 - (FD - 50)} yard-line`);
     }
-    if (CYL <= 50) {
-      setCurrentYardLine(`${CYL} yard-line`);
+    if (Math.round(CYL) <= 50) {
+      setCurrentYardLine(`${Math.round(CYL)} yard-line`);
+    } else if (Math.round(CYL) >= 100) {
+      setCurrentYardLine("TOUCHDOWN");
     } else {
       setCurrentYardLine(`${50 - (CYL - 50)} yard-line`);
     }
@@ -239,20 +266,24 @@ const Data = ({ data }) => {
     }
   });
 
-  useEffect(() => {
-    if (CYL >= FD) {
-      setLOS(CYL);
+  {
+    /*useEffect(() => {
+    if (Math.round(CYL) >= FD) {
+      setLOS(Math.round(CYL));
       setFD(LOS + 10);
       setDown(1);
     }
-  });
+  });*/
+  }
 
   useEffect(() => {
     setYardsToGain(FD - LOS);
-    if (FD <= 0 || FD >= 100) {
+    if (FD >= 100) {
       setYardsToGain("GOAL");
     }
-    if (down === 1) {
+    if (CYL >= 100) {
+      setDownAndYardage("TOUCHDOWN");
+    } else if (down === 1) {
       setDownAndYardage(`1st & ${yardsToGain}`);
     } else if (down === 2) {
       setDownAndYardage(`2nd & ${yardsToGain}`);
@@ -268,6 +299,11 @@ const Data = ({ data }) => {
       navigate("/");
     }
   }, [logout, navigate]);
+
+  {
+    /*Testing First Down Conversions */
+  }
+  useEffect(() => {});
 
   return (
     <>
@@ -297,7 +333,7 @@ const Data = ({ data }) => {
               <div
                 className="current-yard-line"
                 style={{
-                  left: `${CYL - 0.5}%`,
+                  left: `${Math.round(CYL) - 0.5}%`,
                 }}
               ></div>
               <div
