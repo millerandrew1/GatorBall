@@ -56,7 +56,7 @@ function App() {
         <h1>GatorBall</h1>
       </header>
 
-      <form className="login" onSubmit={tempLogin}>
+      <form className="login" onSubmit={saveLogin}>
         <h2>Create Account: </h2>
         <input
           requiretemp
