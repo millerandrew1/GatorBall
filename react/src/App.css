@@ -1,0 +1,85 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.uf-logo {
+  height: 6em;
+  padding: 1.5em;
+}
+
+.uf-logo:hover {
+  filter: drop-shadow(0 0 2em #ffffff);
+}
+
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #0021a5;
+  background: linear-gradient(to right, #0021a5, white);
+  color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.login-bar {
+  width: 80%;
+  max-width: 196px;
+  padding: 10px;
+  border: 2px solid #0021a5;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.login-bar:focus {
+  border: none;
+  filter: drop-shadow(0 0 0.2em #fa4616);
+}
+
+.gatorball-id {
+  margin-top: 16px;
+}
+
+.login-button {
+  display: inline-block;
+  padding: 8px 64px;
+  background-color: #0021a5;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 24px;
+  margin-top: 16px;
+  transition: background-color 0.3s ease;
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.login-button:hover {
+  background-color: #405bc8;
+}
+
+.login-font {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.click-logo {
+  margin-top: 64px;
+  color: #888;
+}
