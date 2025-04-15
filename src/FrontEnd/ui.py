@@ -12,6 +12,16 @@ import csv
 import time
 from datetime import datetime
 
+# WebSocket Imports
+import asyncio
+import nest_asyncio
+import uvicorn 
+import threading
+from threading import Lock
+from fastapi import FastAPI, WebSocket
+import json
+from pathlib import Path
+
 # Create a queue to safely pass data between threads
 q = queue.Queue()
 
@@ -34,6 +44,57 @@ current_ball_y = 0
 
 global position_history
 position_history = []
+
+global current_time
+current_time = 0
+app = FastAPI()
+clients = set()
+
+file = Path("gameStates.json")
+
+if not file.exists():
+    file.write_text("[]")
+
+file_lock = Lock()
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    clients.add(websocket)
+    try: 
+        while True:
+            data = {"time": current_time, "yardX": current_ball_x, "yardY": current_ball_y}
+            await websocket.send_json(data)
+            await asyncio.sleep(0.1)
+            try:
+                with file_lock:
+                    # Read current content of the file
+                    with file.open("r") as f:
+                        try:
+                            existing_data = json.load(f)
+                            if not isinstance(existing_data, list):
+                                existing_data = []  # Reset if the file content is not a list
+                        except json.JSONDecodeError:
+                            existing_data = []  # If JSON is corrupted, reset it
+
+                    # Append new data to the list
+                    existing_data.append(data)
+
+                    # Write the updated data back to the file
+                    with file.open("w") as f:
+                        json.dump(existing_data, f, indent=2)
+
+            except Exception as e:
+                print(f"Error writing to JSON file: {e}")
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+    finally:
+        clients.discard(websocket)
+
+def start_websocket_server():
+    nest_asyncio.apply()
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+# WebSocket Imports ^^^
 
 def main():
     def update_values_from_serial():
@@ -580,6 +641,9 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
+    ws_thread = threading.Thread(target=start_websocket_server, daemon=True)
+    ws_thread.start()
+
     main()
 
 # TODO:
