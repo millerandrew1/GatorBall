@@ -5,6 +5,8 @@ from pathlib import Path
 from fastapi import FastAPI, WebSocket
 import asyncio 
 from threading import Lock
+import time
+from datetime import datetime
 
 file = Path("gameStates.json")
 
@@ -22,7 +24,9 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     
     count = 0
-    x, y, z = 0, 0, 0
+    x = 0
+    y = 0
+    z= 0
 
     while count < 50:
         data = {"time": x, "yardX": y, "yardY": z}  # Send structured JSON data
@@ -59,11 +63,12 @@ async def websocket_endpoint(websocket: WebSocket):
             print(f"Failed to write to JSON file: {e}")
         """
 
-        x += 1
-        y += 1
-        z += 1
+        now = datetime.now()
+        x = time.strftime("%H:%M:%S") + f".{now.microsecond // 1000:03d}"       
+        y = 1
+        z = 0
         count += 1
-        await asyncio.sleep(.1)  # Adjust as needed for real-time updates
+        await asyncio.sleep(1)  # Adjust as needed for real-time updates
 
     await websocket.close() 
 

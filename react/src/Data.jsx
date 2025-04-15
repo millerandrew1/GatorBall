@@ -26,48 +26,117 @@ const Data = ({ data }) => {
   const applyYardage = () => {
     const los = Number(applyLOS);
     const fd = Number(applyFD);
-    if (los < 1 || los > 100 || fd < 1 || fd > 100) {
-      setYardError("Please enter numbers between 1 and 99");
-      return;
-    } else if (fd <= los) {
-      setYardError(
-        "Make sure the first down marker is past the line of scrimmage"
-      );
-      return;
-    } else if (CYL >= fd) {
-      setYardError(
-        "Make sure the first down marker is past the current yard-line"
-      );
-      return;
-    }
+    if (!swap) {
+      if (los < 1 || los > 100 || fd < 1 || fd > 100) {
+        setYardError("Please enter numbers between 1 and 99");
+        return;
+      } else if (fd <= los) {
+        setYardError(
+          "Make sure the first down marker is past the line of scrimmage"
+        );
+        return;
+      } else if (Math.round(CYL) >= fd) {
+        setYardError(
+          "Make sure the first down marker is past the current yard-line"
+        );
+        return;
+      }
 
-    setYardError("");
-    setLOS(applyLOS);
-    setFD(applyFD);
-    setLineOfScrimmage(`${LOS} yard-line`);
-    setFirstDownMarker(`${FD} yard-line`);
+      setYardError("");
+      setLOS(applyLOS);
+      setFD(applyFD);
+      setLineOfScrimmage(`${LOS} yard-line`);
+      setFirstDownMarker(`${FD} yard-line`);
+    } else {
+      if (los < 0 || los > 100 || fd < 0 || fd > 100) {
+        setYardError("Please enter numbers between 0 and 100");
+        return;
+      } else if (fd >= los) {
+        setYardError(
+          "Make sure the first down marker is past the line of scrimmage"
+        );
+        return;
+      } else if (Math.round(CYL) <= fd) {
+        setYardError(
+          "Make sure the first down marker is past the current yard-line"
+        );
+        return;
+      }
+
+      setYardError("");
+      setLOS(applyLOS);
+      setFD(applyFD);
+      setLineOfScrimmage(`${LOS} yard-line`);
+      setFirstDownMarker(`${FD} yard-line`);
+    }
   };
 
+  const [downState, setDownState] = useState({
+    down: down,
+    LOS: LOS,
+    FD: FD,
+  });
+  const [possessionState, setPossessionState] = useState("Team A");
+  const [gameStarted, setGameStarted] = useState(false);
+
   const incrementDown = () => {
-    if (down < 4) {
-      setDown(down + 1);
+    setGameStarted(true);
+    setDownState({ down, LOS, FD });
+    console.log(downState);
+    if (!swap) {
+      if (Math.round(CYL) >= FD) {
+        setDown(1);
+        setLOS(Math.round(CYL));
+        setFD(Math.round(CYL) + 10);
+      } else if (down < 4) {
+        setDown((prevDown) => prevDown + 1);
+        setLOS(Math.round(CYL));
+      } else {
+        turnover();
+      }
     } else {
-      setDown(1);
+      if (Math.round(CYL) <= FD) {
+        setDown(1);
+        setLOS(Math.round(CYL));
+        setFD(Math.round(CYL) - 10);
+      } else if (down < 4) {
+        setDown((prevDown) => prevDown + 1);
+        setLOS(Math.round(CYL));
+      } else {
+        turnover();
+      }
     }
   };
 
   const undoDown = () => {
-    if (down == 1) {
-      setDown(4);
-    } else {
-      setDown(down - 1);
+    if (gameStarted == true) {
+      setDown(downState.down);
+      setLOS(downState.LOS);
+      setFD(downState.FD);
+      setPossession(possessionState);
     }
+  };
+
+  const [swap, setSwap] = useState(false);
+  const turnover = () => {
+    setPossession((prev) => (prev === "Team A" ? "Team B" : "Team A"));
+    setDown(1);
+    setLOS(Math.round(CYL));
+    if (swap) {
+      setFD(Math.round(CYL) + 10);
+    } else {
+      setFD(Math.round(CYL) - 10);
+    }
+    setSwap(!swap);
   };
 
   const [isFlipped, setIsFlipped] = useState(false);
   const flip = () => {
-    setIsFlipped((prev) => !prev);
-    setPossession((prev) => (prev === "Team A" ? "Team B" : "Team A"));
+    setPossession("Team B");
+    setSwap(false);
+    setDown(1);
+    setLOS(25);
+    setFD(35);
   };
 
   const [homeScore, setHomeScore] = useState(0);
@@ -98,9 +167,9 @@ const Data = ({ data }) => {
   const incrementQuarter = () => {
     if (quarter < 4) {
       setQuarter(quarter + 1);
-    } else {
+    }
+    if (quarter == 2) {
       flip();
-      setPossession("Team B");
     }
   };
 
@@ -141,9 +210,14 @@ const Data = ({ data }) => {
     setScoreError("");
     setApplyLOS(0);
     setApplyFD(0);
+    setDownState({ down: down, LOS: LOS, FD: FD });
     setHomeScore(0);
     setAwayScore(0);
     setLastScore(null);
+    setPossessionState("Team A");
+    setGameStarted(false);
+    setIsFlipped(false);
+    setSwap(false);
   };
 
   const [logout, setLogout] = useState(false);
@@ -155,27 +229,6 @@ const Data = ({ data }) => {
   const [position, setPosition] = useState({ time: 0, yardX: 0, yardY: 0 });
   const [gameStates, setGameStates] = useState([]);
 
-  {
-    /* const saveState = useCallback(() => {
-    if (gameStates.length === 0) return; // No data to send
-
-    console.log("Saving game states batch...");
-
-    axios
-      .post("http://localhost:3002/api/game-states", { gameStates })
-      .then((response) => {
-        console.log("Game states saved!", response);
-        setGameStates([]); // Clear the local array after successful save
-      })
-      .catch((error) => console.error("Error saving game state", error));
-  }, [gameStates]);
-
-  useEffect(() => {
-    const interval = setInterval(saveState, 5000);
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, [saveState]); */
-  }
-
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8000/ws");
 
@@ -183,9 +236,11 @@ const Data = ({ data }) => {
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log(data);
+      {
+        /*console.log(data);*/
+      }
       setClock(data.time);
-      setCYL(data.yardX);
+      setCYL(Math.round(data.yardX));
       {
         /* setFD(data.yardY); */
       }
@@ -210,51 +265,34 @@ const Data = ({ data }) => {
     } else {
       setLineOfScrimmage(`${50 - (LOS - 50)} yard-line`);
     }
-    if (FD <= 50) {
+    if (FD <= 50 && FD > 0) {
       setFirstDownMarker(`${FD} yard-line`);
+    } else if (FD >= 100 || FD <= 0) {
+      setFirstDownMarker("Touchdown");
     } else {
       setFirstDownMarker(`${50 - (FD - 50)} yard-line`);
     }
-    if (CYL <= 50) {
-      setCurrentYardLine(`${CYL} yard-line`);
+    if (Math.round(CYL) <= 50 && Math.round(CYL) > 0) {
+      setCurrentYardLine(`${Math.round(CYL)} yard-line`);
+    } else if (Math.round(CYL) >= 100 || Math.round(CYL) <= 0) {
+      setCurrentYardLine("TOUCHDOWN");
     } else {
       setCurrentYardLine(`${50 - (CYL - 50)} yard-line`);
     }
-    {
-      /*else if (CYL >= 100) {
-      setFirstDownMarker(`TOUCHDOWN`);
-      if (possession == "Team A") {
-        setScore((prevScore) => ({
-          ...prevScore,
-          ["home"]: prevScore["home"] + 6,
-        }));
-      } else {
-        setScore((prevScore) => ({
-          ...prevScore,
-          ["away"]: prevScore["away"] + 6,
-        }));
-      }
-      setCYL(25);
-      setFD(null);
-      setLOS(25);
-    } */
-    }
   });
 
   useEffect(() => {
-    if (CYL >= FD) {
-      setLOS(CYL);
-      setFD(LOS + 10);
-      setDown(1);
+    if (!swap) {
+      setYardsToGain(FD - LOS);
+    } else {
+      setYardsToGain(LOS - FD);
     }
-  });
-
-  useEffect(() => {
-    setYardsToGain(FD - LOS);
-    if (FD <= 0 || FD >= 100) {
+    if (FD >= 100 || FD <= 0) {
       setYardsToGain("GOAL");
     }
-    if (down === 1) {
+    if (Math.round(CYL) >= 100 || Math.round(CYL) <= 0) {
+      setDownAndYardage("TOUCHDOWN");
+    } else if (down === 1) {
       setDownAndYardage(`1st & ${yardsToGain}`);
     } else if (down === 2) {
       setDownAndYardage(`2nd & ${yardsToGain}`);
@@ -270,6 +308,8 @@ const Data = ({ data }) => {
       navigate("/");
     }
   }, [logout, navigate]);
+
+  useEffect(() => {});
 
   return (
     <>
@@ -299,7 +339,7 @@ const Data = ({ data }) => {
               <div
                 className="current-yard-line"
                 style={{
-                  left: `${CYL - 0.5}%`,
+                  left: `${Math.round(CYL) - 0.5}%`,
                 }}
               ></div>
               <div
@@ -311,6 +351,7 @@ const Data = ({ data }) => {
               <div
                 className="first-down-marker"
                 style={{
+                  visibility: FD <= 0 || FD >= 100 ? "hidden" : "visible",
                   left: isFlipped ? `${100 - FD}%` : `${FD}%`,
                 }}
               ></div>
@@ -364,7 +405,7 @@ const Data = ({ data }) => {
             <div className="info-section possession-section">
               <strong>Possession: </strong>
               {possession}
-              <button className="flip button" onClick={flip}>
+              <button className="flip button" onClick={turnover}>
                 Swap Possession
               </button>
             </div>
@@ -455,12 +496,12 @@ const Data = ({ data }) => {
           </div>
         </div>
       </section>
-      <div>
+      {/*<div>
         <h1>Real-Time Position</h1>
         <p>X: {position.time}</p>
         <p>Y: {position.yardX}</p>
         <p>Z: {position.yardY}</p>
-      </div>
+      </div>*/}
     </>
   );
 };

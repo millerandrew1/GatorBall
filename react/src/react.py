@@ -65,6 +65,26 @@ async def websocket_endpoint(websocket: WebSocket):
             data = {"time": current_time, "yardX": current_ball_x, "yardY": current_ball_y}
             await websocket.send_json(data)
             await asyncio.sleep(0.1)
+            try:
+                with file_lock:
+                    # Read current content of the file
+                    with file.open("r") as f:
+                        try:
+                            existing_data = json.load(f)
+                            if not isinstance(existing_data, list):
+                                existing_data = []  # Reset if the file content is not a list
+                        except json.JSONDecodeError:
+                            existing_data = []  # If JSON is corrupted, reset it
+
+                    # Append new data to the list
+                    existing_data.append(data)
+
+                    # Write the updated data back to the file
+                    with file.open("w") as f:
+                        json.dump(existing_data, f, indent=2)
+
+            except Exception as e:
+                print(f"Error writing to JSON file: {e}")
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
@@ -132,8 +152,8 @@ def main():
         
         """Read data from the serial port in a background thread."""
         try:
-            ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
-            ser2 = serial.Serial('COM6', 115200)
+            ser1 = serial.Serial('COM3', 115200)  # CHANGE COM PORT as needed
+            ser2 = serial.Serial('COM4', 115200)
             ser1.timeout = 3
             ser2.timeout = 3
             print('Serial port opened')
@@ -152,8 +172,8 @@ def main():
             # NOTE: CHANGE ANCHOR COORDINATES BEFORE USE IF NEEDED
             a_x = 0
             a_y = 0
-            b_x = 8 # b
-            b_y = 0
+            b_x = 0 
+            b_y = 15 # ANCHOR B POSITION
 
             anchor1_buf = []
             anchor2_buf = []
@@ -213,14 +233,16 @@ def main():
 
                         # Compute the angle
                         try:
-                            numerator = a_avg*a_avg + b_x*b_x - c_avg*c_avg
-                            denominator = 2 * a_avg * b_x
+                            numerator = a_avg*a_avg + b_y*b_y - c_avg*c_avg
+                            denominator = 2 * a_avg * b_y
                             ang_theta_val = numerator / denominator
                             ang_theta_val = max(-1, min(1, ang_theta_val))  # clamp
 
                             ang_theta = math.acos(ang_theta_val)
-                            new_dist_x = a_avg * math.cos(ang_theta)
-                            new_dist_y = a_avg * math.sin(ang_theta)
+                            print(f"ANG_THETA: {ang_theta}")
+                            # SWAPPED X AND Y FOR NEW ANCHOR ORIENTATION: FIXME
+                            new_dist_y = a_avg * math.cos(ang_theta)
+                            new_dist_x = a_avg * math.sin(ang_theta)
 
                             print(f"CALCULATED X={new_dist_x:.3f}, CALCULATED Y={new_dist_y:.3f}")
                             q.put((new_dist_x, new_dist_y))
