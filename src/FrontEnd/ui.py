@@ -150,8 +150,8 @@ def main():
         
         """Read data from the serial port in a background thread."""
         try:
-            ser1 = serial.Serial('COM5', 115200)  # CHANGE COM PORT as needed
-            ser2 = serial.Serial('COM6', 115200)
+            ser1 = serial.Serial('COM3', 115200)  # CHANGE COM PORT as needed
+            ser2 = serial.Serial('COM4', 115200)
             ser1.timeout = 3
             ser2.timeout = 3
             print('Serial port opened')
@@ -171,7 +171,7 @@ def main():
             a_x = 0
             a_y = 0
             b_x = 0 
-            b_y = 10 # ANCHOR B POSITION
+            b_y = 5 # ANCHOR B POSITION
 
             anchor1_buf = []
             anchor2_buf = []
