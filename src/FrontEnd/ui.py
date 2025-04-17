@@ -171,7 +171,7 @@ def main():
             a_x = 0
             a_y = 0
             b_x = 0 
-            b_y = 5 # ANCHOR B POSITION
+            b_y = 5 # ANCHOR B POSITION (yards)
 
             anchor1_buf = []
             anchor2_buf = []
